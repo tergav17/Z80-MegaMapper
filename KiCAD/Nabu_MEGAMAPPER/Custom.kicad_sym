@@ -14,7 +14,7 @@
     )
     (symbol "GAL22V10_1_1"
       (rectangle (start -8.89 0) (end 8.89 -33.02)
-        (stroke (width 0) (type default))
+        (stroke (width 0.254) (type default))
         (fill (type background))
       )
       (pin input line (at -11.43 -2.54 0) (length 2.54)
@@ -130,7 +130,7 @@
     )
     (symbol "HM6116_1_1"
       (rectangle (start -8.89 0) (end 8.89 -31.75)
-        (stroke (width 0) (type default))
+        (stroke (width 0.254) (type default))
         (fill (type background))
       )
       (pin input line (at -11.43 -20.32 0) (length 2.54)
