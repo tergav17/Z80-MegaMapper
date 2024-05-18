@@ -22,11 +22,12 @@ module registers(
     inout [7:0] data,
     input wr_n,
     input rd_n,
-    input iorq_n,
     input m1_n,
-	 input record_isr,
-	 input reset_n,
-	 output [7:0] ctrl_out
+    input record_isr_en,
+    input read_isr_en,
+    input write_ctrl_en,
+    input reset_n,
+    output [7:0] ctrl_out
     );
 
 // Define control and instruction registers
@@ -39,20 +40,20 @@ assign ctrl_out = ctrl_reg;
 // Logic for controlling the contents of the control register
 always @(posedge wr_n or negedge reset_n)
 begin
-	if (!reset_n)
-		ctrl_reg = 8'b00000000;
-	else if (!iorq_n)
-		ctrl_reg = data;
+   if (!reset_n)
+      ctrl_reg = 8'b00000000;
+   else if (write_ctrl_en)
+      ctrl_reg = data;
 end
 
 // Logic for reading the output register
-assign data = (!iorq_n && !rd_n) ? isr_reg : 8'bZZZZZZZZ;
+assign data = (!rd_n && read_isr_en) ? isr_reg : 8'bZZZZZZZZ;
 
 // Logic for controlling the contents of the instruction registers
 always @(posedge m1_n)
 begin
-	if (record_isr)
-		isr_reg = data;
+   if (record_isr_en)
+      isr_reg = data;
 end
 
 endmodule

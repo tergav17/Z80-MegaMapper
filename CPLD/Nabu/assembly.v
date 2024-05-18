@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
-// Engineer: 
+// Engineer: Gavin Tersteeg
 // 
 // Create Date:    02:45:57 05/17/2024 
 // Design Name: 
@@ -31,5 +31,18 @@ module assembly(
     output mreq_sys_n
     );
 
+wire [7:0] ctrl_register;
+
+// Define activation condition for the mapper I/O space
+wire mapper_io = !addr[7] && !addr[6] && addr[5] && !addr[4] && !iorq_n;
+
+// Define activation condition for reading the instruction register
+wire read_isr_en = mapper_io && !addr[3] && !addr[0];
+
+// Define activation condition for writing the control register
+wire write_ctrl_en = mapper_io && !addr[3] && addr[2]; 
+
+// Create instance of register logic
+registers reg_0(data, wr_n, rd_n, m1_n, 1'b1, read_isr_en, write_ctrl_en, reset_n, ctrl_register);
 
 endmodule
