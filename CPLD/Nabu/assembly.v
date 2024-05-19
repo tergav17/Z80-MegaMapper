@@ -25,16 +25,18 @@ module assembly(
     input iorq_n,
     input mreq_n,
     input m1_n,
+	 input refresh_n,
     input [7:0] addr,
     input reset_n,
     output iorq_sys_n,
-    output mreq_sys_n
+    output mreq_sys_n,
+	 output test_output
     );
 
 wire [7:0] ctrl_register;
 
 // Define activation condition for the mapper I/O space
-wire mapper_io = !addr[7] && !addr[6] && addr[5] && !addr[4] && !iorq_n;
+wire mapper_io = !addr[7] && !addr[6] && addr[5] && addr[4] && !iorq_n;
 
 // Define activation condition for reading the instruction register
 wire read_isr_en = mapper_io && !addr[3] && !addr[0];
@@ -44,5 +46,11 @@ wire write_ctrl_en = mapper_io && !addr[3] && addr[2];
 
 // Create instance of register logic
 registers reg_0(data, wr_n, rd_n, m1_n, 1'b1, read_isr_en, write_ctrl_en, reset_n, ctrl_register);
+
+// Suppress I/O when in mapper I/O space
+assign iorq_sys_n = iorq_n || mapper_io;
+
+// Create instance of opcode detection logic
+opcode opcode_0(data, m1_n, test_output);
 
 endmodule
