@@ -30,7 +30,8 @@ module assembly(
     input reset_n,
     output iorq_sys_n,
     output mreq_sys_n,
-	 output test_output
+	 output test_output,
+	 output test_output_2
     );
 
 wire [7:0] ctrl_register;
@@ -51,6 +52,6 @@ registers reg_0(data, wr_n, rd_n, m1_n, 1'b1, read_isr_en, write_ctrl_en, reset_
 assign iorq_sys_n = iorq_n || mapper_io;
 
 // Create instance of opcode detection logic
-opcode opcode_0(data, m1_n, test_output);
+opcode opcode_0(data, m1_n, test_output, test_output_2);
 
 endmodule
