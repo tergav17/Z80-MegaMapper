@@ -21,42 +21,46 @@
 module opcode(
     input [7:0] data,
     input m1_n,
-    output at_isr_end,
-	 output is_retn
+    output new_isr,
+	 output last_isr_jmp
     );
 	 
-reg last_was_isr = 0;
-reg last_isr_was_retn = 0;
+// Keeps track of if the next M1 cycle will be the beginning of a new instruction
+reg new_isr_r = 0;
+
+// Is the last opcode byte read decoding into a JUMP instruction?
+reg last_isr_jmp_r = 0;
+
+// The next byte read will be the end of a multi-byte instruction
 reg force_next_isr = 1;
 
-assign at_isr_end = last_was_isr;
-assign is_retn = last_isr_was_retn;
+assign new_isr = new_isr_r;
+assign last_isr_jmp = last_isr_jmp_r;
 
 always @(posedge m1_n)
 begin
-	last_isr_was_retn = 0;
+	last_isr_jmp_r = 0;
 	if (force_next_isr) begin
 		// Currently executing a BIT or MISC instruction
-		last_was_isr = 1;
+		new_isr_r = 1;
 		force_next_isr = 0;
-		
-		if (data == 8'h45)
-			last_isr_was_retn = 1;
 	end
 	else if (data == 8'hCB || data == 8'hED) begin
 		// Prefix for BIT or MISC instruction
-		last_was_isr = 0;
+		new_isr_r = 0;
 		force_next_isr = 1;
 	end
 	else if (data == 8'hDD || data == 8'hED) begin
 		// IX or IY instruction
-		last_was_isr = 0;
+		new_isr_r = 0;
 		force_next_isr = 0;
 	end
 	else begin
 		// Normal instruction
-		last_was_isr = 1;
+		new_isr_r = 1;
 		force_next_isr = 0;
+		if (data == 8'hC3)
+			last_isr_jmp_r = 1;
 	end
 end
 
