@@ -1,0 +1,3 @@
+# Theory of Operation
+
+The MegaMapper board works by intercepting Z80 bus signals and suppressing them to the larger system if necessary. While in external memory mode, all MREQ signals (unless the REFRESH signal is asserted) will be suppressed and interpreted by the board itself. I/O addresses in external memory mode will get translated through the programmable table. Regardless of external memory mode, I/O addresses in certain address ranges will be suppressed and interpreted by the system. In external memory mode, accessing this range will result in the transparent NMI. In internal memory mode, this range will expose internal MegaMapper registers.
