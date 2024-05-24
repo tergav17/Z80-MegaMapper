@@ -4,14 +4,20 @@ The MegaMapper board works by intercepting Z80 bus signals and suppressing them 
 
 The second mode that the machine can operate in is “Virtual Mode”. In this mode, memory operations are intercepted and sent to the onboard static RAM banks. All I/O signals will also be routed through the mapper table. How memory is laid out depends on if the MegaMapper is in the “Trap” state. If the trap state is active (this is always true by default), then memory looks like this:
 
-0000-7FFF: Underlying system memory map
+0000-7FFF: Underlying System Memory
 8000-BFFF: Mapper Table (256 byte blocks repeating)
-C000-FFFF: SRAM Bank 3
+C000-FFFF: Virtual RAM Bank 3
 
 
 When the trap state is reset, the memory map becomes the following:
 
-0000-3FFF: SRAM Bank 0
-4000-7FFF: SRAM Bank 1
-8000-BFFF: SRAM Bank 2
-C000-FFFF: SRAM BANK 3
+0000-3FFF: Virtual RAM Bank 0
+4000-7FFF: Virtual RAM Bank 1
+8000-BFFF: Virtual RAM Bank 2
+C000-FFFF: Virtual RAM BANK 3
+
+Each bank of virtual RAM can be mapped to one of up to 256 banks of onboard static RAM. The maximum amount of RAM that can be addressed this way is 4MB.
+
+To exit out of the trap state, an unconditional jump instruction must be executed (0xC3). The instruction will be executed normally. On the downward edge of the next M1 cycle, the trap state will be reset and memory access will be routed as such.
+
+There are a number of conditions that can start the trap response. These include a maskable interrupt (sampled at the beginning of an M1 cycle), or an I/O instruction accessing the trap address. Either of these will result in the “Trap Pending” flip-flop getting set. This flip-flop directly connects to the NMI, forcing the processor to perform an interrupt at the end of the instruction. pin On the downward edge of the next M1 cycle that is a new instruction, the trap state will be set. Additionally, the “Address Capture” flip-flop will be set, forcing the memory accesses of the next M1 cycle to be constrained to a 4K window of memory. This allows the return address to be returned by the driver regardless of where the stack pointer is located in memory. This flip-flop will be reset at the next negative edge of the M1 signal. 
