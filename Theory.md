@@ -21,3 +21,27 @@ Each bank of virtual RAM can be mapped to one of up to 256 banks of onboard stat
 To exit out of the trap state, an unconditional jump instruction must be executed (0xC3). The instruction will be executed normally. On the downward edge of the next M1 cycle, the trap state will be reset and memory access will be routed as such.
 
 There are a number of conditions that can start the trap response. These include a maskable interrupt (sampled at the beginning of an M1 cycle), or an I/O instruction accessing the trap address. Either of these will result in the “Trap Pending” flip-flop getting set. This flip-flop directly connects to the NMI, forcing the processor to perform an interrupt at the end of the instruction. pin On the downward edge of the next M1 cycle that is a new instruction, the trap state will be set. Additionally, the “Address Capture” flip-flop will be set, forcing the memory accesses of the next M1 cycle to be constrained to a 4K window of memory. This allows the return address to be returned by the driver regardless of where the stack pointer is located in memory. This flip-flop will be reset at the next negative edge of the M1 signal. 
+
+# Memory Map
+
+The MegaMapper occupies 16 bytes of I/O space. On the NABU, this ranges from 0x30-0x3F. Registers are as follows:
+
+0x30 W: Bank register #0
+0x31 W: Bank register #1
+0x32 W: Bank register #2
+0x33 W: Bank register #3
+0x34 W: Control Register
+0x30 R: Instruction Register
+0x32 R: Address Low Register
+0x33 R: Address High Register
+0x38 R/W: Trap Vector
+
+Control register bits:
+0: Enable virtual mode
+1: ?
+2: ?
+3: ?
+4: Protect bank 0
+5: Protect bank 1
+6: Protect bank 2
+7: Protect bank 3
