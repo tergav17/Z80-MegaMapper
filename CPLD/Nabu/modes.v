@@ -42,7 +42,7 @@ module modes(
 
     input trap_condition,
 
-    input irq_n,
+    input irq_sys_n,
 
     input m1_n,
 
@@ -50,9 +50,11 @@ module modes(
 
 	 input last_isr_jmp,
 	 input virtual_enabled,
+	 input clk,
 	 output trap_state,
 
 	 output nmi_n,
+	 output irq_n,
 
 	 output capture_address
 
@@ -69,18 +71,73 @@ reg trap_state_r;
 reg trap_pending_r;
 
 
-// Capture latch
+// Address capture latch
 reg capture_latch_r;
 
-assign trap_state = trap_state_r;
+// Interrupt sync
+reg irq_sync_r;
 
+// Interrupt response supress
+reg irq_supress_r;
+
+assign trap_state = trap_state_r;
+assign capture_address = capture_latch_r;
+
+// Just pass the sync'd irq directly to the processor
+assign irq_n = irq_sync_r;
+
+// When there is a trap pending, do an NMI
+assign nmi_n = !trap_pending_r;
+
+always @(posedge clk)
+begin
+	if (!trap_state_r) begin
+		if (trap_condition)
+			trap_pending_r = 1;
+		else if (!irq_sync_r && !irq_supress_r) begin
+			trap_pending_r = 1;
+			irq_supress_r = 1;
+		end
+	end else
+		trap_pending_r = 0;
+		
+	if (irq_sync_r)
+		irq_supress_r = 0;
+end
+
+always @(negedge m1_n)
+begin
+	// If the capture latch has been enabled for a M1 cycle, disable it
+	if (capture_latch_r)
+		capture_latch_r = 0;
+
+	if (!trap_state_r) begin
+		// Trap must always be enabled when virtualization is off
+		if (!virtual_enabled)
+			trap_state_r = 1;
+		
+		// If there is a trap pending, update the state
+		if (trap_pending_r && new_isr) begin
+			trap_state_r = 1;
+			capture_latch_r = 1;
+		end 
+	end 
+	else begin
+		// Trap can be ended by executing a jump instruction
+		if (last_isr_jmp && virtual_enabled)
+			trap_state_r = 0;
+	end
+end
 
 
 always @(posedge m1_n)
 
 begin
 
-	
+	// Interrupt gets updated on the positive edge of every M1 cycle
+	// May slow down interrupt response by an instruction or two, but gets rid of a lot of edge cases
+
+	irq_sync_r = irq_sys_n;
 
 end
 
