@@ -55,7 +55,8 @@ module assembly(
 
 	 input refresh_n,
 
-    input [7:0] addr,
+    input [2:0] lo_addr,
+	 input io_enable,
 
     input reset_n,
 	 input clk,
@@ -79,19 +80,19 @@ wire [7:0] ctrl_register;
 
 // Define activation condition for the mapper I/O space
 
-wire mapper_io = !addr[7] && !addr[6] && addr[5] && addr[4] && !iorq_n;
+wire mapper_io = io_enable && !iorq_n;
 
 
 
 // Define activation condition for reading the instruction register
 
-wire read_isr_en = mapper_io && !addr[3] && !addr[0];
+wire read_isr_en = mapper_io && !lo_addr[2] && !lo_addr[1] && !lo_addr[0];
 
 
 
 // Define activation condition for writing the control register
 
-wire write_ctrl_en = mapper_io && !addr[3] && addr[2]; 
+wire write_ctrl_en = mapper_io && lo_addr[2] && !lo_addr[1]; 
 
 
 // Keep track of instruction state going into mode logic
@@ -118,7 +119,7 @@ registers reg_0(data, wr_n, rd_n, m1_n, 1'b1, read_isr_en, write_ctrl_en, reset_
 opcode opcode_0(data, m1_n, new_isr, last_isr_jmp);
 
 // Create instance of mode logic
-modes modes_0(mapper_io && addr[3], irq_sys_n, m1_n, new_isr, last_isr_jmp, ctrl_register[0], clk, trap_state, nmi_n, irq_n, capture_address);
+modes modes_0(mapper_io && lo_addr[2] && lo_addr[1], irq_sys_n, m1_n, new_isr, last_isr_jmp, ctrl_register[0], clk, trap_state, nmi_n, irq_n, capture_address);
 
 
 
