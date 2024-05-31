@@ -40,7 +40,7 @@
 
 module modes(
 
-    input trap_condition,
+    input io_trap_condition,
 
     input irq_sys_n,
 
@@ -67,8 +67,8 @@ module modes(
 
 reg trap_state_r;
 
-// Is there a trap pending?
-reg trap_pending_r;
+// Has an I/O address violation occured?
+reg io_trap_occured_r;
 
 
 // Address capture latch
@@ -86,8 +86,11 @@ assign capture_address = capture_latch_r;
 // Just pass the sync'd irq directly to the processor
 assign irq_n = irq_sync_r;
 
+// Logic for when a trap is pending
+wire trap_pending = io_trap_occured_r || !irq_n;
+
 // When there is a trap pending, do an NMI
-assign nmi_n = !trap_pending_r;
+assign nmi_n = !trap_pending;
 
 always @(posedge clk)
 begin
