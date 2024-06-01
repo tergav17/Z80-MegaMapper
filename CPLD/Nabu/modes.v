@@ -89,8 +89,8 @@ assign irq_n = irq_sync_r;
 // Logic for when a trap is pending
 wire trap_pending = io_trap_occured_r || !irq_n;
 
-// When there is a trap pending, do an NMI
-assign nmi_n = !trap_pending;
+// An NMI should only be asserted what trap state is reset
+assign nmi_n = !trap_pending && trap_state_r;
 
 always @(posedge clk)
 begin
@@ -120,7 +120,7 @@ begin
 			trap_state_r = 1;
 		
 		// If there is a trap pending, update the state
-		if (trap_pending_r && new_isr) begin
+		if (trap_pending && new_isr) begin
 			trap_state_r = 1;
 			capture_latch_r = 1;
 		end 
