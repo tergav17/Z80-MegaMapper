@@ -29,7 +29,7 @@ When not in trap mode, the MegaMapper will record the fetched byte at the end of
 
 # Memory Map
 
-The MegaMapper occupies 16 bytes of I/O space. On the NABU, this ranges from 0x30-0x3F. Registers are as follows:
+The MegaMapper occupies 8 bytes of I/O space. On the NABU, this ranges from 0x30-0x37. Registers are as follows:
 
 0x30 W: Bank register #0
 0x31 W: Bank register #1
@@ -39,14 +39,19 @@ The MegaMapper occupies 16 bytes of I/O space. On the NABU, this ranges from 0x3
 0x30 R: Instruction Register
 0x32 R: Address Low Register
 0x33 R: Address High Register
-0x38 R/W: Trap Vector
+0x37 R/W: Trap Vector
+
+Bank register bits:
+0-7: Page select (128 total)
+8: Protect page
 
 Control register bits:
 0: Enable virtual mode
-1: ?
+1: Force maskable interrupt
 2: ?
 3: ?
-4: Protect bank 0
-5: Protect bank 1
-6: Protect bank 2
-7: Protect bank 3
+4: ?
+5: ?
+6: ?
+7: ?
+
