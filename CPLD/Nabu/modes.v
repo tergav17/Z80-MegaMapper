@@ -54,7 +54,6 @@ module modes(
 	 output trap_state,
 
 	 output nmi_n,
-	 output irq_n,
 
 	 output capture_address
 
@@ -76,9 +75,6 @@ reg capture_latch_r;
 
 // Interrupt sync
 reg irq_sync_r;
-
-// Interrupt response supress
-reg irq_supress_r;
 
 assign trap_state = trap_state_r;
 assign capture_address = capture_latch_r;
