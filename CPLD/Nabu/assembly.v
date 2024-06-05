@@ -59,7 +59,6 @@ module assembly(
 	 input io_enable,
 
     input reset_n,
-	 input clk,
 
     output iorq_sys_n,
 
@@ -67,7 +66,7 @@ module assembly(
 
 	 output irq_n,
 	 output nmi_n,
-	 output trap_state,
+	 output translate_addr,
 	 output capture_address
 
     );
@@ -99,6 +98,10 @@ wire write_ctrl_en = mapper_io && lo_addr[2] && !lo_addr[1];
 wire new_isr;
 wire last_isr_jmp;
 
+// Define control register bits
+wire virtual_enable = ctrl_register[0];
+wire force_irq = ctrl_register[1];
+
 // Suppress I/O when in mapper I/O space
 
 assign iorq_sys_n = iorq_n || mapper_io;
@@ -106,6 +109,19 @@ assign iorq_sys_n = iorq_n || mapper_io;
 // Supress memory accesses depending on virtualization and trap state
 
 assign mreq_sys_n = mreq_n;
+
+// Trap state used to control how interrupts work
+wire trap_state;
+
+// When the trap state is reset, maskable interrupts should be controlled by the control register
+assign irq_n = trap_state ? !force_irq : irq_sys_n;
+
+// Address translations should always be done if virtualization is enabled
+// Unless a memory I/O access in incoming, of course
+assign translate_addr = virtual_enable && mreq_n;
+
+// I/O violations need to be readable from the instruction register
+wire io_violation_occured;
 
 
 // Create instance of register logic
@@ -119,7 +135,7 @@ registers reg_0(data, wr_n, rd_n, m1_n, 1'b1, read_isr_en, write_ctrl_en, reset_
 opcode opcode_0(data, m1_n, new_isr, last_isr_jmp);
 
 // Create instance of mode logic
-modes modes_0(mapper_io && lo_addr[2] && lo_addr[1], irq_sys_n, m1_n, new_isr, last_isr_jmp, ctrl_register[0], clk, trap_state, nmi_n, irq_n, capture_address);
+modes modes_0(mapper_io && lo_addr[2] && lo_addr[1], irq_sys_n, m1_n, new_isr, last_isr_jmp, virtual_enable, io_violation_occured, trap_state, nmi_n, capture_address);
 
 
 

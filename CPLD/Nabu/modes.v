@@ -40,7 +40,7 @@
 
 module modes(
 
-    input io_trap_condition,
+    input io_violation,
 
     input irq_sys_n,
 
@@ -50,7 +50,7 @@ module modes(
 
 	 input last_isr_jmp,
 	 input virtual_enabled,
-	 input clk,
+	 output io_violation_occured,
 	 output trap_state,
 
 	 output nmi_n,
@@ -67,7 +67,7 @@ module modes(
 reg trap_state_r;
 
 // Has an I/O address violation occured?
-reg io_trap_occured_r;
+reg io_violation_occured_r;
 
 
 // Address capture latch
@@ -76,32 +76,22 @@ reg capture_latch_r;
 // Interrupt sync
 reg irq_sync_r;
 
+// Assign registers to outputs
 assign trap_state = trap_state_r;
 assign capture_address = capture_latch_r;
+assign io_violation_occured = io_violation_occured_r;
 
-// Just pass the sync'd irq directly to the processor
-assign irq_n = irq_sync_r;
-
-// Logic for when a trap is pending
-wire trap_pending = io_trap_occured_r || !irq_n;
+// A trap can said to be pending when either there is an interrupt waiting, or a I/O violation has been observed
+wire trap_pending = io_violation_occured_r || !irq_sync_r;
 
 // An NMI should only be asserted what trap state is reset
-assign nmi_n = !trap_pending && trap_state_r;
+assign nmi_n = !trap_pending || trap_state_r;
 
-always @(posedge clk)
+// If an I/O violation occures while trap mode is reset, the set the flag
+// Otherwise, an I/O violation during trap mode will reset the flag
+always @(negedge io_violation)
 begin
-	if (!trap_state_r) begin
-		if (trap_condition)
-			trap_pending_r = 1;
-		else if (!irq_sync_r && !irq_supress_r) begin
-			trap_pending_r = 1;
-			irq_supress_r = 1;
-		end
-	end else
-		trap_pending_r = 0;
-		
-	if (irq_sync_r)
-		irq_supress_r = 0;
+	io_violation_occured_r = !trap_state_r;
 end
 
 always @(negedge m1_n)
@@ -111,7 +101,7 @@ begin
 		capture_latch_r = 0;
 
 	if (!trap_state_r) begin
-		// Trap must always be enabled when virtualization is off
+		// Trap must always be set when virtualization is off
 		if (!virtual_enabled)
 			trap_state_r = 1;
 		
@@ -132,7 +122,6 @@ end
 always @(posedge m1_n)
 
 begin
-
 	// Interrupt gets updated on the positive edge of every M1 cycle
 	// May slow down interrupt response by an instruction or two, but gets rid of a lot of edge cases
 
