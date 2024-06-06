@@ -56,6 +56,7 @@ module assembly(
 	 input refresh_n,
 
     input [2:0] lo_addr,
+	 input [1:0] hi_addr,
 	 input io_enable,
 
     input reset_n,
@@ -106,9 +107,12 @@ wire force_irq = ctrl_register[1];
 
 assign iorq_sys_n = iorq_n || mapper_io;
 
-// Supress memory accesses depending on virtualization and trap state
+// Supress memory accesses when external memory or writing to the translation table
+// If a refresh operation occures or virtualization is turned off, no remapping should be done
+wire xmem_in_range = trap_state ? hi_addr[0] && hi_addr[1] : 1;
+wire xmem_n = (refresh_n && virtual_enable) ? !xmem_in_range : 1;
 
-assign mreq_sys_n = mreq_n;
+assign mreq_sys_n = (refresh_n && virtual_enable) ? 0 : mreq_n;
 
 // Trap state used to control how interrupts work
 wire trap_state;
