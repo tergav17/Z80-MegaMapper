@@ -68,7 +68,12 @@ module assembly(
 	 output irq_n,
 	 output nmi_n,
 	 output translate_addr,
-	 output capture_address
+	 output trap_addr_wr_n,
+	 output trap_addr_rd_n,
+	 output bank_wr_n,
+	 output capture_addr,
+	 output xmem_sel_n,
+	 output trans_wr_n
 
     );
 
@@ -94,14 +99,28 @@ wire read_isr_en = mapper_io && !lo_addr[2] && !lo_addr[1] && !lo_addr[0];
 
 wire write_ctrl_en = mapper_io && lo_addr[2] && !lo_addr[1]; 
 
+// Define I/O violation condition
+wire io_violation_cond = mapper_io && lo_addr[2] && lo_addr[1];
 
 // Keep track of instruction state going into mode logic
 wire new_isr;
 wire last_isr_jmp;
 
+// Trap state used to control how interrupts work
+wire trap_state;
+
 // Define control register bits
 wire virtual_enable = ctrl_register[0];
 wire force_irq = ctrl_register[1];
+
+// We should capture the current "real" address everytime there is an I/O violation
+assign trap_addr_wr_n = !io_violation_cond;
+
+// For when we want to read either the high or low trap address
+assign trap_addr_rd_n = !(mapper_io && !lo_addr[2] && lo_addr[1]) || rd_n;
+
+// For wehn we want to write to the bank registers
+assign bank_wr_n = !(mapper_io && !lo_addr[2]) || wr_n;
 
 // Suppress I/O when in mapper I/O space
 
@@ -109,13 +128,11 @@ assign iorq_sys_n = iorq_n || mapper_io;
 
 // Supress memory accesses when external memory or writing to the translation table
 // If a refresh operation occures or virtualization is turned off, no remapping should be done
-wire xmem_in_range = trap_state ? hi_addr[0] && hi_addr[1] : 1;
-wire xmem_n = (refresh_n && virtual_enable) ? !xmem_in_range : 1;
+wire mreq_override_cond = (trap_state ? hi_addr[1] : 1) && refresh_n && virtual_enable;
 
-assign mreq_sys_n = (refresh_n && virtual_enable) ? 0 : mreq_n;
-
-// Trap state used to control how interrupts work
-wire trap_state;
+assign mreq_sys_n = mreq_override_cond || mreq_n;
+assign trans_wr_n = !mreq_override_cond || mreq_n || !(trap_state && !hi_addr[0]) || wr_n;
+assign xmem_sel_n = !mreq_override_cond || mreq_n || (trap_state && !hi_addr[0]);
 
 // When the trap state is reset, maskable interrupts should be controlled by the control register
 assign irq_n = trap_state ? !force_irq : irq_sys_n;
@@ -139,7 +156,7 @@ registers reg_0(data, wr_n, rd_n, m1_n, 1'b1, read_isr_en, write_ctrl_en, reset_
 opcode opcode_0(data, m1_n, new_isr, last_isr_jmp);
 
 // Create instance of mode logic
-modes modes_0(mapper_io && lo_addr[2] && lo_addr[1], irq_sys_n, m1_n, new_isr, last_isr_jmp, virtual_enable, io_violation_occured, trap_state, nmi_n, capture_address);
+modes modes_0(io_violation_cond, irq_sys_n, m1_n, new_isr, last_isr_jmp, virtual_enable, io_violation_occured, trap_state, nmi_n, capture_addr);
 
 
 
