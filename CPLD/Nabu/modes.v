@@ -48,14 +48,14 @@ module modes(
 
     input new_isr,
 
-	 input last_isr_jmp,
-	 input virtual_enabled,
-	 output io_violation_occured,
-	 output trap_state,
+    input last_isr_jmp,
+    input virtual_enabled,
+    output io_violation_occured,
+    output trap_state,
 
-	 output nmi_n,
+    output nmi_n,
 
-	 output capture_address
+    output capture_address
 
     );
 
@@ -91,41 +91,41 @@ assign nmi_n = !trap_pending || trap_state_r;
 // Otherwise, an I/O violation during trap mode will reset the flag
 always @(negedge io_violation)
 begin
-	io_violation_occured_r = !trap_state_r;
+   io_violation_occured_r = !trap_state_r;
 end
 
 always @(negedge m1_n)
 begin
-	// If the capture latch has been enabled for a M1 cycle, disable it
-	if (capture_latch_r)
-		capture_latch_r = 0;
+   // If the capture latch has been enabled for a M1 cycle, disable it
+   if (capture_latch_r)
+      capture_latch_r = 0;
 
-	if (!trap_state_r) begin
-		// Trap must always be set when virtualization is off
-		if (!virtual_enabled)
-			trap_state_r = 1;
-		
-		// If there is a trap pending, update the state
-		if (trap_pending && new_isr) begin
-			trap_state_r = 1;
-			capture_latch_r = 1;
-		end 
-	end 
-	else begin
-		// Trap can be ended by executing a jump instruction
-		if (last_isr_jmp && virtual_enabled)
-			trap_state_r = 0;
-	end
+   if (!trap_state_r) begin
+      // Trap must always be set when virtualization is off
+      if (!virtual_enabled)
+         trap_state_r = 1;
+      
+      // If there is a trap pending, update the state
+      if (trap_pending && new_isr) begin
+         trap_state_r = 1;
+         capture_latch_r = 1;
+      end 
+   end 
+   else begin
+      // Trap can be ended by executing a jump instruction
+      if (last_isr_jmp && virtual_enabled)
+         trap_state_r = 0;
+   end
 end
 
 
 always @(posedge m1_n)
 
 begin
-	// Interrupt gets updated on the positive edge of every M1 cycle
-	// May slow down interrupt response by an instruction or two, but gets rid of a lot of edge cases
+   // Interrupt gets updated on the positive edge of every M1 cycle
+   // May slow down interrupt response by an instruction or two, but gets rid of a lot of edge cases
 
-	irq_sync_r = irq_sys_n;
+   irq_sync_r = irq_sys_n;
 
 end
 

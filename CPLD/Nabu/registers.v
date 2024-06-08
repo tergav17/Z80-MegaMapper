@@ -55,8 +55,9 @@ module registers(
     input write_ctrl_en,
 
     input reset_n,
+    input io_violation_occured,
 
-    output [7:0] ctrl_out
+    output [2:0] ctrl_out
 
     );
 
@@ -64,7 +65,7 @@ module registers(
 
 // Define control and instruction registers
 
-reg[7:0] ctrl_reg;
+reg[2:0] ctrl_reg;
 
 reg[7:0] isr_reg;
 
@@ -84,11 +85,11 @@ begin
 
    if (!reset_n)
 
-      ctrl_reg = 8'b00000000;
+      ctrl_reg = 2'b00;
 
    else if (write_ctrl_en)
 
-      ctrl_reg = data;
+      ctrl_reg = data[2:0];
 
 end
 
@@ -96,7 +97,7 @@ end
 
 // Logic for reading the output register
 
-assign data = (!rd_n && read_isr_en) ? isr_reg : 8'bZZZZZZZZ;
+assign data = (!rd_n && read_isr_en) ? {isr_reg[7:3], io_violation_occured, isr_reg[1:0]} : 8'bZZZZZZZZ;
 
 
 

@@ -46,11 +46,12 @@ module opcode(
 
     output new_isr,
 
-	 output last_isr_jmp
+    output last_isr_jmp,
+    output io_direction
 
     );
 
-	 
+    
 
 // Keeps track of if the next M1 cycle will be the beginning of a new instruction
 
@@ -68,63 +69,77 @@ reg last_isr_jmp_r = 0;
 
 reg force_next_isr = 1;
 
+// Keeps track of the direction of the current I/O instruction
+reg io_direction_r = 0;
+
 
 
 assign new_isr = new_isr_r;
 
 assign last_isr_jmp = last_isr_jmp_r;
 
+assign io_direction = io_direction_r;
 
 
 always @(posedge m1_n)
 
 begin
 
-	last_isr_jmp_r = 0;
+   // If the CPU is doing an IN or OUT instruction, lets try to find what direction it's going
+   // We don't care what this value is if we aren't doing an I/O instruction
+   // 0 = OUT
+   // 1 = IN
+   if (data[7:4] == 4'hD)
+      io_direction_r = data[3];
+   else
+      io_direction_r = !data[0];
 
-	if (force_next_isr) begin
 
-		// Currently executing a BIT or MISC instruction
+   last_isr_jmp_r = 0;
 
-		new_isr_r = 1;
+   if (force_next_isr) begin
 
-		force_next_isr = 0;
+      // Currently executing a BIT or MISC instruction
 
-	end
+      new_isr_r = 1;
 
-	else if (data == 8'hCB || data == 8'hED) begin
+      force_next_isr = 0;
 
-		// Prefix for BIT or MISC instruction
+   end
 
-		new_isr_r = 0;
+   else if (data == 8'hCB || data == 8'hED) begin
 
-		force_next_isr = 1;
+      // Prefix for BIT or MISC instruction
 
-	end
+      new_isr_r = 0;
 
-	else if (data == 8'hDD || data == 8'hED) begin
+      force_next_isr = 1;
 
-		// IX or IY instruction
+   end
 
-		new_isr_r = 0;
+   else if (data == 8'hDD || data == 8'hED) begin
 
-		force_next_isr = 0;
+      // IX or IY instruction
 
-	end
+      new_isr_r = 0;
 
-	else begin
+      force_next_isr = 0;
 
-		// Normal instruction
+   end
 
-		new_isr_r = 1;
+   else begin
 
-		force_next_isr = 0;
+      // Normal instruction
 
-		if (data == 8'hC3)
+      new_isr_r = 1;
 
-			last_isr_jmp_r = 1;
+      force_next_isr = 0;
 
-	end
+      if (data == 8'hC3)
+
+         last_isr_jmp_r = 1;
+
+   end
 
 end
 
