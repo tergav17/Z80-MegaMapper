@@ -1,0 +1,23 @@
+%TF.GenerationSoftware,KiCad,Pcbnew,7.0.7*%
+%TF.CreationDate,2024-06-12T19:49:10-05:00*%
+%TF.ProjectId,Nabu_MEGAMAPPER,4e616275-5f4d-4454-9741-4d4150504552,rev?*%
+%TF.SameCoordinates,Original*%
+%TF.FileFunction,Profile,NP*%
+%FSLAX46Y46*%
+G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
+G04 Created by KiCad (PCBNEW 7.0.7) date 2024-06-12 19:49:10*
+%MOMM*%
+%LPD*%
+G01*
+G04 APERTURE LIST*
+%TA.AperFunction,Profile*%
+%ADD10C,0.100000*%
+%TD*%
+G04 APERTURE END LIST*
+D10*
+X69850000Y-59055000D02*
+X228600000Y-59055000D01*
+X228600000Y-150495000D01*
+X69850000Y-150495000D01*
+X69850000Y-59055000D01*
+M02*
