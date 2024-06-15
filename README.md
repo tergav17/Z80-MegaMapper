@@ -14,3 +14,21 @@ The expanded memory is fairly self explanatory, but the other features may requi
 This is different from emulation as fundamentally everything is still executing on bare hardware. It provides vast software compatibility while still scratching the “retro hardware” itch that makes emulators simply not as fun (personally). In theory, this same type of device could have been built in the 80s with off-the-shelf components. All of the heavy lifting is still done by the ~3.5 Mhz Z80 processor.
 
 Admittedly, emulation can always provide better results than a janky virtualization set up like this. This is more of a “Because I Can” project than anything else. 
+
+# BOM
+
+| Quantity | Reference  | Part          | Link |
+| -------- | ---------- | ------------- | ---- |
+|        1 | U2         | 74LS32        |      |
+|        2 | U3, U4     | 74LS670       |      |
+|        1 | U5         | HM6116        |      |
+|        3 | U6..8      | 74LS157       |      |
+|        1 | U9         | 74LS244       |      |
+|        2 | U10, U11   | 74LS374       |      |
+|        1 | U12        | 74LS85        |      |
+|        1 | U13        | XC9536PC44    |      |
+|        1 | U14        | 74LS139       |      |
+|      1-4 | U15..18    | AS6C4008      |      |
+|        1 | U19        | 74LS245       |      |
+|       19 | C1..19     | 0.1 uF C      |      |
+|        1 | C20        | 100 uF        |      |
