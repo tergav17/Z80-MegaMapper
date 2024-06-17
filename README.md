@@ -1,6 +1,6 @@
 # Z80 MegaMapper
 
-The Z80 MegaMapper is designed to enhance the ability of existing retro computers. This is done by interposing the Z80 CPU and intercepting certain signals. The current version of the MegaMapper provides the following enhancements:
+The Z80 MegaMapper (ZMM) is designed to enhance the ability of existing retro computers. This is done by interposing the Z80 CPU and intercepting certain signals. The current version of the MegaMapper provides the following enhancements:
 
 - An additional 512 KB of static RAM, expandable up to 2 MB.
 - Simple memory management, allowing the 4 independently selectable memory banks. Banks can also be write protected.
@@ -14,6 +14,10 @@ The expanded memory is fairly self explanatory, but the other features may requi
 This is different from emulation as fundamentally everything is still executing on bare hardware. It provides vast software compatibility while still scratching the “retro hardware” itch that makes emulators simply not as fun (personally). In theory, this same type of device could have been built in the 80s with off-the-shelf components. All of the heavy lifting is still done by the ~3.5 Mhz Z80 processor.
 
 Admittedly, emulation can always provide better results than a janky virtualization set up like this. This is more of a “Because I Can” project than anything else. 
+
+# Limitations
+
+One of the major design limitations of the ZMM is the fact that no provisions have been made for memory mapped I/O. Video RAM can crudely be accomplished by periodically scanning parts of memory and updating the VDP accordingly. This is very inefficient, especially the bigger the VRAM section gets. The size of the bankable sections is also limited to 16 KB, anything smaller will have to be emulated by manually copying sections of memory.
 
 # BOM
 
