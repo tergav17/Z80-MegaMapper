@@ -1,4 +1,5 @@
 # ZMM Test Software Build Script
 
 OUT = ./Output
-BUILD = ./Build
+BUILD = ./Build 
+SOURCE = ./Source
