@@ -18,7 +18,7 @@ When the trap state is reset, the memory map becomes the following:
 
 Each bank of virtual RAM can be mapped to one of up to 256 banks of onboard static RAM. The maximum amount of RAM that can be addressed this way is 4MB.
 
-To exit out of the trap state, an unconditional jump instruction must be executed (0xC3). The instruction will be executed normally. On the downward edge of the next M1 cycle, the trap state will be reset and memory access will be routed as such.
+To exit out of the trap state, a `RETN` instruction must be executed (0xED45). The instruction will be executed normally, though the stack pointer will be constrained to a 4kb window of memory. On the downward edge of the next M1 cycle, the trap state will be reset and memory access will be routed as such.
 
 In the trap state, maskable interrupts are not directly sent to the CPU. They are instead used to generate traps, and a register is used to manipulate the state of the maskable interrupt during virtual mode directly.
 
