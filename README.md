@@ -1,5 +1,7 @@
 # Z80 MegaMapper
 
+![Assembled ZMM](https://github.com/tergav17/Z80-MegaMapper/blob/main/Resources/IMG_1.jpg)
+
 The Z80 MegaMapper (ZMM) is designed to enhance the ability of existing retro computers. This is done by interposing the Z80 CPU and intercepting certain signals. The current version of the MegaMapper provides the following enhancements:
 
 - An additional 512 KB of static RAM, expandable up to 2 MB.
