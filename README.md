@@ -17,6 +17,12 @@ This is different from emulation as fundamentally everything is still executing 
 
 Admittedly, emulation can always provide better results than a janky virtualization set up like this. This is more of a “Because I Can” project than anything else. 
 
+# Installation
+
+The ZMM is designed to slot directly into where the Z80 plugs into the mainboard of the host computer. Everything runs on +5V, so no additional jumpers are needed.
+
+![ZMM Installed in a Nabu](https://github.com/tergav17/Z80-MegaMapper/blob/main/Resources/IMG_2.jpg)
+
 # Limitations
 
 One of the major design limitations of the ZMM is the fact that no provisions have been made for memory mapped I/O. Video RAM can crudely be accomplished by periodically scanning parts of memory and updating the VDP accordingly. This is very inefficient, especially the bigger the VRAM section gets. The size of the bankable sections is also limited to 16 KB, anything smaller will have to be emulated by manually copying sections of memory.
