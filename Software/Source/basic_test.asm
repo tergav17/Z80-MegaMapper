@@ -12,6 +12,7 @@
 ; Equates
 bdos	equ	0x0005
 
+b_exit	equ	0x00
 b_coin	equ	0x01
 b_cout	equ	0x02
 b_print	equ	0x09
@@ -29,8 +30,8 @@ start:	di
 	ld	de,splash
 	call	bdos
 	
-	; Do first test
-	ld	c,b_print
+	; Test #0
+test0:	ld	c,b_print
 	ld	de,s_test0
 	call	bdos
 	
@@ -38,15 +39,15 @@ start:	di
 	ld	a,0b00000001
 	out	(zm_ctrl),a
 	ld	hl,zm_map
-gentab0:ld	(hl),l
+loop0$:	ld	(hl),l
 	inc	l
-	jp	nz,gentab0
+	jp	nz,loop0
 	ld	a,0b00000101
 	out	(zm_ctrl),a
 	ld	hl,zm_map
-gentab0:ld	(hl),l
+loop1$:	ld	(hl),l
 	inc	l
-	jp	nz,gentab0
+	jp	nz,loop1
 	
 	; Disable mapper mode
 	ld	a,0b00000000
@@ -55,7 +56,38 @@ gentab0:ld	(hl),l
 	ld	de,s_pass
 	call	bdos
 	
-
+	; Pass
+	ld	c,b_print
+	ld	de,s_pass
+	call	bdos
+	
+	; Test #1
+test1:	ld	c,b_print
+	ld	de,s_test1
+	call	bdos
+	
+	; Zero out top 16K of memory
+	ld	a,0b00000001
+	out	(zm_ctrl),a
+	ld	hl,zm_map
+	ld	hl,0xC000
+	ld	de,0xC001
+	ld	bc,0x4000-1
+	xor	a
+	ld	(hl),a
+	ldir
+	
+	; Disable mapper mode
+	ld	a,0b00000000
+	out	(zm_ctrl),a
+	ld	c,b_print
+	ld	de,s_pass
+	call	bdos
+	
+	; Done
+	ld	c,b_exit
+	call	bdos
+	
 
 ; Strings
 	
@@ -67,4 +99,7 @@ s_pass:
 	defb	'PASS',0x0A,0x0D,'$"
 	
 s_test0:
-	defb	'TEST 0: Basic instruction set mapping sanity check: '
+	defb	'TEST 0: Basic instruction set mapping sanity check: $'
+	
+s_test1:
+	defb	'TEST 1: Check memory overlay: $'
