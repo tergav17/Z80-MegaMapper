@@ -52,26 +52,32 @@ wrdone:	ld	hl,heap
 	
 	; Read and test a value from memory
 	; We will do this multiple times in a row
-rdloop:	ld	b,64
+rdloop:	ld	b,32
 0$:	ld	a,(hl)
 	cp	c
 	jp	nz,memerr
 	djnz	0$
 	
 	; Do next memory cell
-next:	inc	c
+next:	inc	hl
+	inc	c
 	or	a
 	sbc	hl,sp
 	ld	a,h
+	inc	a
 	or	l
 	jp	z,pass
 	add	hl,sp
 	jp	rdloop
 	
-	; Print pass message and reset
+	; Print pass message
 pass:	ld	c,b_print
 	ld	de,s_pass
 	call	bdos
+	
+	; Increment phase and retry
+	ld	hl,phase
+	inc	(hl)
 	jp	cycle
 	
 	; Something went wrong, report it!
@@ -84,12 +90,15 @@ memerr:	ld	(tsvalue),bc
 	ld	a,c
 	call	tohex
 	ld	(parm0),de
-	ld	a,h
+	ld	a,b
 	call	tohex
 	ld	(parm2),de
+	ld	a,h
+	call	tohex
+	ld	(parm3),de
 	ld	a,l
 	call	tohex
-	ld	(parm2+2),de
+	ld	(parm3+2),de
 	
 	; Print it
 	ld	c,b_print
@@ -104,13 +113,13 @@ memerr:	ld	(tsvalue),bc
 	; Converts the value into an 8 bit hex number
 	; A = number to convert
 	; DE = result
-	; uses: b
-tohex:	ld	b,a
+	; uses: DE
+tohex:	ld	d,a
 	call	0$
-	ld	d,a
-	ld	a,b
-	call	1$
 	ld	e,a
+	ld	a,d
+	call	1$
+	ld	d,a
 	ret
 	
 0$:	rra
@@ -140,12 +149,14 @@ s_pass:
 	defb	"PASS COMPLETE",0x0A,0x0D,'$'
 	
 s_alert:
-	defb	'FAIL: Expected '
+	defb	'FAIL: EXP '
 parm0:	defb	'XX'
-	defb	', Read '
+	defb	', RD '
 parm1:	defb	'XX'
-	defb	', Address '
-parm2:	defb	'XXXX'
+	defb	', TRY '
+parm2:	defb	'XX'
+	defb	', ADR '
+parm3:	defb	'XXXX'
 	defb	0x0A,0x0D,'$'
 	
 splash:
