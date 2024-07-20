@@ -39,15 +39,15 @@ test0:	ld	c,b_print
 	ld	a,0b00000001
 	out	(zm_ctrl),a
 	ld	hl,zm_map
-l0$:	ld	(hl),l
+0$:	ld	(hl),l
 	inc	l
-	jp	nz,l0$
+	jp	nz,0$
 	ld	a,0b00000101
 	out	(zm_ctrl),a
 	ld	hl,zm_map
-l1$:	ld	(hl),l
+1$:	ld	(hl),l
 	inc	l
-	jp	nz,l1$
+	jp	nz,1$
 	
 	; Disable mapper mode
 	ld	a,0b00000000
@@ -96,7 +96,7 @@ splash:
 	defb	'Rev 1a, tergav17 (Gavin)',0x0A,0x0D,'$' 
 	
 s_pass:
-	defb	'PASS',0x0A,0x0D,'$"
+	defb	'PASS',0x0A,0x0D,'$'
 	
 s_test0:
 	defb	'TEST 0: Basic instruction set mapping sanity check: $'

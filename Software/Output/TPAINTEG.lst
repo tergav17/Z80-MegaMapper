@@ -1,0 +1,223 @@
+              	; --------------------------------------
+              	; zasm: assemble "TPAINTEG.asm"
+              	; date: 2024-07-20 01:27:41
+              	; --------------------------------------
+
+
+              	;
+              	;**************************************************************
+              	;*
+              	;*      T P A   M E M O R Y   I N T E G R I T Y   T E S T
+              	;*
+              	;*      Checks the integrity of memory within the TPA. The
+              	;*      purpose of this program is to look for certain addresses
+              	;*      that may be "flakey" for some reason or another
+              	;*
+              	;*      Program will continue to run until machine is reset
+              	;* 
+              	;**************************************************************
+              	
+              	; Equates
+0005:         	bdos	equ	0x0005
+              	
+0000:         	b_exit	equ	0x00
+0001:         	b_coin	equ	0x01
+0002:         	b_cout	equ	0x02
+0009:         	b_print	equ	0x09
+              	
+              	; Program start
+0100:         		org	0x0100
+              		
+              		; Print "hello" splash
+0100: F3      	start:	di
+0101: 0E09    		ld	c,b_print
+0103: 11D601  		ld	de,splash
+0106: CD0500  		call	bdos
+              		
+              		; Execute a cycle of the test
+0109: 210C02  	cycle:	ld	hl,heap
+010C: 3A9601  		ld	a,(phase)
+010F: 4F      		ld	c,a
+              		
+0110: 71      	wrloop:	ld	(hl),c
+0111: 23      		inc	hl
+0112: 0C      		inc	c
+0113: B7      		or	a
+0114: ED72    		sbc	hl,sp
+0116: 7C      		ld	a,h
+0117: B5      		or	l
+0118: CA1F01  		jp	z,wrdone
+011B: 39      		add	hl,sp
+011C: C31001  		jp	wrloop
+              		
+              	
+              		; Prepare to read back all values
+011F: 210C02  	wrdone:	ld	hl,heap
+0122: 3A9601  		ld	a,(phase)
+0125: 4F      		ld	c,a
+              		
+              		; Read and test a value from memory
+              		; We will do this multiple times in a row
+0126: 0640    	rdloop:	ld	b,64
+0128: 7E      	0$:	ld	a,(hl)
+0129: B9      		cp	c
+012A: C24701  		jp	nz,memerr
+012D: 10F9    		djnz	0$
+              		
+              		; Do next memory cell
+012F: 0C      	next:	inc	c
+0130: B7      		or	a
+0131: ED72    		sbc	hl,sp
+0133: 7C      		ld	a,h
+0134: B5      		or	l
+0135: CA3C01  		jp	z,pass
+0138: 39      		add	hl,sp
+0139: C32601  		jp	rdloop
+              		
+              		; Print pass message and reset
+013C: 0E09    	pass:	ld	c,b_print
+013E: 119B01  		ld	de,s_pass
+0141: CD0500  		call	bdos
+0144: C30901  		jp	cycle
+              		
+              		; Something went wrong, report it!
+0147: ED439701	memerr:	ld	(tsvalue),bc
+014B: 229901  		ld	(tsaddr),hl 
+              		
+              		; Fill out parameters
+014E: CD7F01  		call	tohex
+0151: ED53C301		ld	(parm1),de
+0155: 79      		ld	a,c
+0156: CD7F01  		call	tohex
+0159: ED53BA01		ld	(parm0),de
+015D: 7C      		ld	a,h
+015E: CD7F01  		call	tohex
+0161: ED53CF01		ld	(parm2),de
+0165: 7D      		ld	a,l
+0166: CD7F01  		call	tohex
+0169: ED53D101		ld	(parm2+2),de
+              		
+              		; Print it
+016D: 0E09    		ld	c,b_print
+016F: 11AB01  		ld	de,s_alert
+0172: CD0500  		call	bdos
+              		
+              		; Restore context and continue onto next
+0175: ED4B9701		ld	bc,(tsvalue)
+0179: 2A9901  		ld	hl,(tsaddr)
+017C: C32F01  		jp	next
+              	
+              		; Converts the value into an 8 bit hex number
+              		; A = number to convert
+              		; DE = result
+              		; uses: b
+017F: 47      	tohex:	ld	b,a
+0180: CD8A01  		call	0$
+0183: 57      		ld	d,a
+0184: 78      		ld	a,b
+0185: CD8E01  		call	1$
+0188: 5F      		ld	e,a
+0189: C9      		ret
+              		
+018A: 1F      	0$:	rra
+018B: 1F      		rra
+018C: 1F      		rra
+018D: 1F      		rra
+018E: F6F0    	1$:	or	0xF0
+0190: 27      		daa
+0191: C6A0    		add	a,0xA0
+0193: CE40    		adc	a,0x40
+0195: C9      		ret
+              		
+              	; Variables
+0196:         	phase:
+0196: 00      		defb	0
+              	
+0197:         	tsvalue:
+0197: 0000    		defb	0,0
+              		
+0199:         	tsaddr:
+0199: 0000    		defb	0,0
+              	
+              	
+              	; Strings
+              	
+019B:         	s_pass:
+019B: 50415353		defb	"PASS COMPLETE",0x0A,0x0D,'$'
+019F: 20434F4D	
+01A3: 504C4554	
+01A7: 450A0D24	
+              		
+01AB:         	s_alert:
+01AB: 4641494C		defb	'FAIL: Expected '
+01AF: 3A204578	
+01B3: 70656374	
+01B7: 656420  	
+01BA: 5858    	parm0:	defb	'XX'
+01BC: 2C205265		defb	', Read '
+01C0: 616420  	
+01C3: 5858    	parm1:	defb	'XX'
+01C5: 2C204164		defb	', Address '
+01C9: 64726573	
+01CD: 7320    	
+01CF: 58585858	parm2:	defb	'XXXX'
+01D3: 0A0D24  		defb	0x0A,0x0D,'$'
+              		
+01D6:         	splash:
+01D6: 54504120		defb	'TPA Memory Integrity Test',0x0A,0x0D
+01DA: 4D656D6F	
+01DE: 72792049	
+01E2: 6E746567	
+01E6: 72697479	
+01EA: 20546573	
+01EE: 740A0D  	
+01F1: 52657620		defb	'Rev 1a, tergav17 (Gavin)',0x0A,0x0D,'$' 
+01F5: 31612C20	
+01F9: 74657267	
+01FD: 61763137	
+0201: 20284761	
+0205: 76696E29	
+0209: 0A0D24  	
+              		
+              		
+              	; Heap
+020C:         	heap:
+020C: 00      		defb	0
+
+
+; +++ segments +++
+
+#CODE          = $0100 =   256,  size = $010D =   269
+
+; +++ global symbols +++
+
+_end     = $020D =   525          TPAINTEG.asm:23 (unused)
+_size    = $010D =   269          TPAINTEG.asm:23 (unused)
+b_coin   = $0001 =     1          TPAINTEG.asm:18 (unused)
+b_cout   = $0002 =     2          TPAINTEG.asm:19 (unused)
+b_exit   = $0000 =     0          TPAINTEG.asm:17 (unused)
+b_print  = $0009 =     9          TPAINTEG.asm:20
+bdos     = $0005 =     5          TPAINTEG.asm:15
+cycle    = $0109 =   265          TPAINTEG.asm:32
+heap     = $020C =   524          TPAINTEG.asm:157
+memerr   = $0147 =   327          TPAINTEG.asm:78
+next     = $012F =   303          TPAINTEG.asm:62
+parm0    = $01BA =   442          TPAINTEG.asm:144
+parm1    = $01C3 =   451          TPAINTEG.asm:146
+parm2    = $01CF =   463          TPAINTEG.asm:148
+pass     = $013C =   316          TPAINTEG.asm:72
+phase    = $0196 =   406          TPAINTEG.asm:127
+rdloop   = $0126 =   294          TPAINTEG.asm:55
+s_alert  = $01AB =   427          TPAINTEG.asm:142
+s_pass   = $019B =   411          TPAINTEG.asm:139
+splash   = $01D6 =   470          TPAINTEG.asm:151
+start    = $0100 =   256          TPAINTEG.asm:26 (unused)
+tohex    = $017F =   383          TPAINTEG.asm:108
+tsaddr   = $0199 =   409          TPAINTEG.asm:133
+tsvalue  = $0197 =   407          TPAINTEG.asm:130
+wrdone   = $011F =   287          TPAINTEG.asm:49
+wrloop   = $0110 =   272          TPAINTEG.asm:36
+
+
+total time: 0.0294 sec.
+no errors

@@ -53,10 +53,10 @@ wrdone:	ld	hl,heap
 	; Read and test a value from memory
 	; We will do this multiple times in a row
 rdloop:	ld	b,64
-l0$:	ld	a,(hl)
+0$:	ld	a,(hl)
 	cp	c
 	jp	nz,memerr
-	djnz	l0$
+	djnz	0$
 	
 	; Do next memory cell
 next:	inc	c
@@ -77,24 +77,47 @@ pass:	ld	c,b_print
 	; Something went wrong, report it!
 memerr:	ld	(tsvalue),bc
 	ld	(tsaddr),hl 
+	
+	; Fill out parameters
+	call	tohex
+	ld	(parm1),de
+	ld	a,c
+	call	tohex
+	ld	(parm0),de
+	ld	a,h
+	call	tohex
+	ld	(parm2),de
+	ld	a,l
+	call	tohex
+	ld	(parm2+2),de
+	
+	; Print it
+	ld	c,b_print
+	ld	de,s_alert
+	call	bdos
+	
+	; Restore context and continue onto next
+	ld	bc,(tsvalue)
+	ld	hl,(tsaddr)
+	jp	next
 
 	; Converts the value into an 8 bit hex number
 	; A = number to convert
 	; DE = result
 	; uses: b
 tohex:	ld	b,a
-	call	l0$
+	call	0$
 	ld	d,a
 	ld	a,b
-	call	l1$
+	call	1$
 	ld	e,a
 	ret
 	
-l0$:	rra
+0$:	rra
 	rra
 	rra
 	rra
-l1$:	or	0xF0
+1$:	or	0xF0
 	daa
 	add	a,0xA0
 	adc	a,0x40
