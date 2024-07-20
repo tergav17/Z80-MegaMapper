@@ -29,28 +29,94 @@ start:	di
 	call	bdos
 	
 	; Execute a cycle of the test
-cycle:	ld	de,heap
-	ld	a,(heap)
+cycle:	ld	hl,heap
+	ld	a,(phase)
+	ld	c,a
 	
-wrloop:	ld	(de),a
-	ld	h,d
-	ld	l,e
-	inc	de
-	inc	a
+wrloop:	ld	(hl),c
+	inc	hl
+	inc	c
 	or	a
 	sbc	hl,sp
-	jp	nz,wrloop
+	ld	a,h
+	or	l
+	jp	z,wrdone
+	add	hl,sp
+	jp	wrloop
 	
+
+	; Prepare to read back all values
+wrdone:	ld	hl,heap
+	ld	a,(phase)
+	ld	c,a
 	
-hlt:	jp	hlt
+	; Read and test a value from memory
+	; We will do this multiple times in a row
+rdloop:	ld	b,64
+l0$:	ld	a,(hl)
+	cp	c
+	jp	nz,memerr
+	djnz	l0$
+	
+	; Do next memory cell
+next:	inc	c
+	or	a
+	sbc	hl,sp
+	ld	a,h
+	or	l
+	jp	z,pass
+	add	hl,sp
+	jp	rdloop
+	
+	; Print pass message and reset
+pass:	ld	c,b_print
+	ld	de,s_pass
+	call	bdos
+	jp	cycle
+	
+	; Something went wrong, report it!
+memerr:	ld	(tsvalue),bc
+	ld	(tsaddr),hl 
+
+	; Converts the value into an 8 bit hex number
+	; A = number to convert
+	; DE = result
+	; uses: b
+tohex:	ld	b,a
+	call	l0$
+	ld	d,a
+	ld	a,b
+	call	l1$
+	ld	e,a
+	ret
+	
+l0$:	rra
+	rra
+	rra
+	rra
+l1$:	or	0xF0
+	daa
+	add	a,0xA0
+	adc	a,0x40
+	ret
 	
 ; Variables
 phase:
 	defb	0
 
-; Strings
+tsvalue:
+	defb	0,0
 	
-alert:
+tsaddr:
+	defb	0,0
+
+
+; Strings
+
+s_pass:
+	defb	"PASS COMPLETE",0x0A,0x0D,'$'
+	
+s_alert:
 	defb	'FAIL: Expected '
 parm0:	defb	'XX'
 	defb	', Read '

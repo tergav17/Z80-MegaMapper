@@ -39,15 +39,15 @@ test0:	ld	c,b_print
 	ld	a,0b00000001
 	out	(zm_ctrl),a
 	ld	hl,zm_map
-loop0$:	ld	(hl),l
+l0$:	ld	(hl),l
 	inc	l
-	jp	nz,loop0
+	jp	nz,l0$
 	ld	a,0b00000101
 	out	(zm_ctrl),a
 	ld	hl,zm_map
-loop1$:	ld	(hl),l
+l1$:	ld	(hl),l
 	inc	l
-	jp	nz,loop1
+	jp	nz,l1$
 	
 	; Disable mapper mode
 	ld	a,0b00000000
