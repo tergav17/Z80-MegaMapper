@@ -18,6 +18,8 @@ b_coin	equ	0x01
 b_cout	equ	0x02
 b_print	equ	0x09
 
+id_base	equ	0xC0
+
 ; Program start
 	org	0x0100
 	
@@ -27,9 +29,71 @@ start:	di
 	ld	de,splash
 	call	bdos
 
+; Executes a read command
+; HL = Destination of data
+;
+; Returns HL += 512
+; uses: AF, BC, D, HL
+id_rphy:ld	a,1
+	out	(id_base+0x04),a
+	call	id_busy
+	ld	a,0x20
+	call	id_comm
+	call	id_wdrq
+	ld	d,0
+	ld	c,id_base
+id_rph0:ini
+	inc	c
+	ini
+	dec	c
+	dec	d
+	jr	nz,id_rph0
+	call	id_busy
+	ret
+
+; Waits for a DRQ (Data Request)
+;
+; uses: AF
+id_wdrq:in	a,(id_base+0xE)
+	bit	3,a
+	jr	z,id_wdrq
+	ret
+	
+; Issues an IDE command
+; A = Command to issue
+;
+; uses: AF
+id_comm:push	af
+	call	id_busy
+	pop	af
+	out	(id_base+0xE),a
+	ret
+	
+	
+; Waits for the IDE drive to no longer be busy
+;
+; Resets flag z on error
+id_busy:in	a,(id_base+0xE)
+	bit	6,a
+	jr	z,id_busy
+	bit	7,a
+	jr	nz,id_busy
+	bit	0,a
+	ret
+
+
+; Waits a little bit
+;
+; uses: B
+id_stal:push	bc
+	pop	bc
+	djnz	id_stal
+	ret
+
 	; Converts the value into an 8 bit hex number
-	; A = number to convert
-	; DE = result
+	; A = Number to convert
+	;
+	; Returns DE = result
 	; uses: DE
 tohex:	ld	d,a
 	call	0$
@@ -48,6 +112,7 @@ tohex:	ld	d,a
 	add	a,0xA0
 	adc	a,0x40
 	ret
+	
 	
 ; Variables
 phase:
