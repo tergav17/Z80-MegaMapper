@@ -28,6 +28,25 @@ start:	di
 	ld	c,b_print
 	ld	de,splash
 	call	bdos
+	
+	; Select IDE drive
+	ld	a,0xE0
+	out	(id_base+0xC),a
+	ld	b,10
+	call	id_stal
+	in	a,(id_base+0xC)
+	inc	a
+	jp	nz,cycle
+	
+	; print error and exit
+	ld	c,b_print
+	ld	de,s_nosel
+	call	bdos
+	ld	c,b_exit
+	call	bdos
+	
+	; do a pass of the test
+cycle:
 
 ; Executes a read command
 ; HL = Destination of data
@@ -129,6 +148,9 @@ tsaddr:
 
 s_pass:
 	defb	"PASS COMPLETE",0x0A,0x0D,'$'
+	
+s_nosel:
+	defb	"CANNOT SELECT IDE DRIVE",0x0A,0x0D,'$'
 	
 s_alert:
 	defb	'FAIL: AT1 '
