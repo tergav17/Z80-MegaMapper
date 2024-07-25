@@ -38,15 +38,32 @@ start:	di
 	inc	a
 	jp	nz,cycle
 	
-	; print error and exit
+	; Print error and exit
 	ld	c,b_print
 	ld	de,s_nosel
 	call	bdos
 	ld	c,b_exit
 	call	bdos
 	
-	; do a pass of the test
-cycle:
+	; Do a pass of the test
+	; Set upeer address registers
+cycle:	xor	a
+	out	(id_base+0x8),a
+	out	(id_base+0xA),a
+	
+	; First read of sector
+	ld	a,(block)
+	out	(id_base+6),a
+	ld	hl,at0
+	call	id_rphy
+	
+	; Second read of sector
+	ld	a,(block)
+	out	(id_base+6),a
+	ld	hl,at1
+	call	id_rphy
+	
+	; Compare
 
 ; Executes a read command
 ; HL = Destination of data
@@ -134,7 +151,7 @@ tohex:	ld	d,a
 	
 	
 ; Variables
-phase:
+block:
 	defb	0
 
 tsvalue:
@@ -171,3 +188,6 @@ splash:
 ; Heap
 heap:
 	defb	0
+	
+at0	equ	heap
+at1	equ	heap+512
