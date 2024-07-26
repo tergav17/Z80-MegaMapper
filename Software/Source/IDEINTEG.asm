@@ -29,6 +29,9 @@ start:	di
 	ld	de,splash
 	call	bdos
 	
+	; TODO: remove
+	jp	cycle
+	
 	; Select IDE drive
 	ld	a,0xE0
 	out	(id_base+0xC),a
@@ -47,7 +50,8 @@ start:	di
 	
 	; Do a pass of the test
 	; Set upeer address registers
-cycle:	xor	a
+cycle:	jp	9$
+	xor	a
 	out	(id_base+0x8),a
 	out	(id_base+0xA),a
 	
@@ -64,6 +68,63 @@ cycle:	xor	a
 	call	id_rphy
 	
 	; Compare
+9$:	ld	de,at0
+compare:ld	hl,512
+	add	hl,de
+	ld	a,(de)
+	ld	b,(hl)
+	cp	b
+	jp	z,next
+	
+	; Does not equal!
+	ex	de,hl
+	ld	(tsaddr),hl
+	ld	de,at0
+	or	a
+	sbc	hl,de
+	call	tohex
+	ld	(parm0),de
+	ld	a,b
+	call	tohex
+	ld	(parm1),de
+	ld	a,h
+	call	tohex
+	ld	(parm3),de
+	ld	a,l
+	call	tohex
+	ld	(parm3+2),de
+	ld	a,(block)
+	call	tohex
+	ld	(parm2),de
+	
+	; Print it
+	ld	c,b_print
+	ld	de,s_alert
+	call	bdos
+	
+	; Restore context and continue onto next
+	ld	de,(tsaddr)
+	
+	; Move on to the next value
+next:	inc	de
+	ld	hl,at1
+	or	a
+	sbc	hl,de
+	jp	nz,compare
+	
+	; Next block
+	ld	a,(block)
+	inc	a
+	ld	(block),a
+	jp	nz,cycle
+	
+	; Pass
+	ld	c,b_print
+	ld	de,s_pass
+	call	bdos
+	
+	; Restart test
+	jp	cycle
 
 ; Executes a read command
 ; HL = Destination of data
@@ -153,9 +214,6 @@ tohex:	ld	d,a
 ; Variables
 block:
 	defb	0
-
-tsvalue:
-	defb	0,0
 	
 tsaddr:
 	defb	0,0

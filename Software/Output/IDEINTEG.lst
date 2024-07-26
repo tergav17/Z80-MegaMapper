@@ -1,0 +1,328 @@
+              	; --------------------------------------
+              	; zasm: assemble "IDEINTEG.asm"
+              	; date: 2024-07-25 23:04:38
+              	; --------------------------------------
+
+
+              	;
+              	;**************************************************************
+              	;*
+              	;*      I D E   I N T E R F A C E   I N T E G R I T Y   T E S T
+              	;*
+              	;*      Checks the integrity of NABU IDE interface in repeatedly
+              	;*      reading the first 256 blocks of memory.
+              	;*
+              	;*      Program will continue to run until machine is reset
+              	;* 
+              	;**************************************************************
+              	
+              	; Equates
+0005:         	bdos	equ	0x0005
+              	
+0000:         	b_exit	equ	0x00
+0001:         	b_coin	equ	0x01
+0002:         	b_cout	equ	0x02
+0009:         	b_print	equ	0x09
+              	
+00C0:         	id_base	equ	0xC0
+              	
+              	; Program start
+0100:         		org	0x0100
+              		
+              		; Print "hello" splash
+0100: F3      	start:	di
+0101: 0E09    		ld	c,b_print
+0103: 115F02  		ld	de,splash
+0106: CD0500  		call	bdos
+              		
+              		; TODO: remove
+0109: C32801  		jp	cycle
+              		
+              		; Select IDE drive
+010C: 3EE0    		ld	a,0xE0
+010E: D3CC    		out	(id_base+0xC),a
+0110: 060A    		ld	b,10
+0112: CDED01  		call	id_stal
+0115: DBCC    		in	a,(id_base+0xC)
+0117: 3C      		inc	a
+0118: C22801  		jp	nz,cycle
+              		
+              		; Print error and exit
+011B: 0E09    		ld	c,b_print
+011D: 111C02  		ld	de,s_nosel
+0120: CD0500  		call	bdos
+0123: 0E00    		ld	c,b_exit
+0125: CD0500  		call	bdos
+              		
+              		; Do a pass of the test
+              		; Set upeer address registers
+0128: C34601  	cycle:	jp	9$
+012B: AF      		xor	a
+012C: D3C8    		out	(id_base+0x8),a
+012E: D3CA    		out	(id_base+0xA),a
+              		
+              		; First read of sector
+0130: 3A0902  		ld	a,(block)
+0133: D3C6    		out	(id_base+6),a
+0135: 219802  		ld	hl,at0
+0138: CDB101  		call	id_rphy
+              		
+              		; Second read of sector
+013B: 3A0902  		ld	a,(block)
+013E: D3C6    		out	(id_base+6),a
+0140: 219804  		ld	hl,at1
+0143: CDB101  		call	id_rphy
+              		
+              		; Compare
+0146: 119802  	9$:	ld	de,at0
+0149: 210002  	compare:ld	hl,512
+014C: 19      		add	hl,de
+014D: 1A      		ld	a,(de)
+014E: 46      		ld	b,(hl)
+014F: B8      		cp	b
+0150: CA9201  		jp	z,next
+              		
+              		; Does not equal!
+0153: EB      		ex	de,hl
+0154: 220A02  		ld	(tsaddr),hl
+0157: 119802  		ld	de,at0
+015A: B7      		or	a
+015B: ED52    		sbc	hl,de
+015D: CDF201  		call	tohex
+0160: ED534002		ld	(parm0),de
+0164: 78      		ld	a,b
+0165: CDF201  		call	tohex
+0168: ED534802		ld	(parm1),de
+016C: 7C      		ld	a,h
+016D: CDF201  		call	tohex
+0170: ED535802		ld	(parm3),de
+0174: 7D      		ld	a,l
+0175: CDF201  		call	tohex
+0178: ED535A02		ld	(parm3+2),de
+017C: 3A0902  		ld	a,(block)
+017F: CDF201  		call	tohex
+0182: ED535002		ld	(parm2),de
+              		
+              		; Print it
+0186: 0E09    		ld	c,b_print
+0188: 113602  		ld	de,s_alert
+018B: CD0500  		call	bdos
+              		
+              		; Restore context and continue onto next
+018E: ED5B0A02		ld	de,(tsaddr)
+              		
+              		; Move on to the next value
+0192: 13      	next:	inc	de
+0193: 219804  		ld	hl,at1
+0196: B7      		or	a
+0197: ED52    		sbc	hl,de
+0199: C24901  		jp	nz,compare
+              		
+              		; Next block
+019C: 3A0902  		ld	a,(block)
+019F: 3C      		inc	a
+01A0: 320902  		ld	(block),a
+01A3: C22801  		jp	nz,cycle
+              		
+              		; Pass
+01A6: 0E09    		ld	c,b_print
+01A8: 110C02  		ld	de,s_pass
+01AB: CD0500  		call	bdos
+              		
+              		; Restart test
+01AE: C32801  		jp	cycle
+              	
+              	; Executes a read command
+              	; HL = Destination of data
+              	;
+              	; Returns HL += 512
+              	; uses: AF, BC, D, HL
+01B1: 3E01    	id_rphy:ld	a,1
+01B3: D3C4    		out	(id_base+0x04),a
+01B5: CDE001  		call	id_busy
+01B8: 3E20    		ld	a,0x20
+01BA: CDD801  		call	id_comm
+01BD: CDD101  		call	id_wdrq
+01C0: 1600    		ld	d,0
+01C2: 0EC0    		ld	c,id_base
+01C4: EDA2    	id_rph0:ini
+01C6: 0C      		inc	c
+01C7: EDA2    		ini
+01C9: 0D      		dec	c
+01CA: 15      		dec	d
+01CB: 20F7    		jr	nz,id_rph0
+01CD: CDE001  		call	id_busy
+01D0: C9      		ret
+              	
+              	; Waits for a DRQ (Data Request)
+              	;
+              	; uses: AF
+01D1: DBCE    	id_wdrq:in	a,(id_base+0xE)
+01D3: CB5F    		bit	3,a
+01D5: 28FA    		jr	z,id_wdrq
+01D7: C9      		ret
+              		
+              	; Issues an IDE command
+              	; A = Command to issue
+              	;
+              	; uses: AF
+01D8: F5      	id_comm:push	af
+01D9: CDE001  		call	id_busy
+01DC: F1      		pop	af
+01DD: D3CE    		out	(id_base+0xE),a
+01DF: C9      		ret
+              		
+              		
+              	; Waits for the IDE drive to no longer be busy
+              	;
+              	; Resets flag z on error
+01E0: DBCE    	id_busy:in	a,(id_base+0xE)
+01E2: CB77    		bit	6,a
+01E4: 28FA    		jr	z,id_busy
+01E6: CB7F    		bit	7,a
+01E8: 20F6    		jr	nz,id_busy
+01EA: CB47    		bit	0,a
+01EC: C9      		ret
+              	
+              	
+              	; Waits a little bit
+              	;
+              	; uses: B
+01ED: C5      	id_stal:push	bc
+01EE: C1      		pop	bc
+01EF: 10FC    		djnz	id_stal
+01F1: C9      		ret
+              	
+              		; Converts the value into an 8 bit hex number
+              		; A = Number to convert
+              		;
+              		; Returns DE = result
+              		; uses: DE
+01F2: 57      	tohex:	ld	d,a
+01F3: CDFD01  		call	0$
+01F6: 5F      		ld	e,a
+01F7: 7A      		ld	a,d
+01F8: CD0102  		call	1$
+01FB: 57      		ld	d,a
+01FC: C9      		ret
+              		
+01FD: 1F      	0$:	rra
+01FE: 1F      		rra
+01FF: 1F      		rra
+0200: 1F      		rra
+0201: F6F0    	1$:	or	0xF0
+0203: 27      		daa
+0204: C6A0    		add	a,0xA0
+0206: CE40    		adc	a,0x40
+0208: C9      		ret
+              		
+              		
+              	; Variables
+0209:         	block:
+0209: 00      		defb	0
+              		
+020A:         	tsaddr:
+020A: 0000    		defb	0,0
+              	
+              	
+              	; Strings
+              	
+020C:         	s_pass:
+020C: 50415353		defb	"PASS COMPLETE",0x0A,0x0D,'$'
+0210: 20434F4D	
+0214: 504C4554	
+0218: 450A0D24	
+              		
+021C:         	s_nosel:
+021C: 43414E4E		defb	"CANNOT SELECT IDE DRIVE",0x0A,0x0D,'$'
+0220: 4F542053	
+0224: 454C4543	
+0228: 54204944	
+022C: 45204452	
+0230: 4956450A	
+0234: 0D24    	
+              		
+0236:         	s_alert:
+0236: 4641494C		defb	'FAIL: AT1 '
+023A: 3A204154	
+023E: 3120    	
+0240: 5858    	parm0:	defb	'XX'
+0242: 2C204154		defb	', AT2 '
+0246: 3220    	
+0248: 5858    	parm1:	defb	'XX'
+024A: 2C20424C		defb	', BLK '
+024E: 4B20    	
+0250: 5858    	parm2:	defb	'XX'
+0252: 2C204144		defb	', ADR '
+0256: 5220    	
+0258: 58585858	parm3:	defb	'XXXX'
+025C: 0A0D24  		defb	0x0A,0x0D,'$'
+              		
+025F:         	splash:
+025F: 49444520		defb	'IDE Interface Integrity Test',0x0A,0x0D
+0263: 496E7465	
+0267: 72666163	
+026B: 6520496E	
+026F: 74656772	
+0273: 69747920	
+0277: 54657374	
+027B: 0A0D    	
+027D: 52657620		defb	'Rev 1a, tergav17 (Gavin)',0x0A,0x0D,'$' 
+0281: 31612C20	
+0285: 74657267	
+0289: 61763137	
+028D: 20284761	
+0291: 76696E29	
+0295: 0A0D24  	
+              		
+              		
+              	; Heap
+0298:         	heap:
+0298: 00      		defb	0
+              		
+0298:         	at0	equ	heap
+0498:         	at1	equ	heap+512
+
+
+; +++ segments +++
+
+#CODE          = $0100 =   256,  size = $0199 =   409
+
+; +++ global symbols +++
+
+_end    = $0299 =   665          IDEINTEG.asm:24 (unused)
+_size   = $0199 =   409          IDEINTEG.asm:24 (unused)
+at0     = $0298 =   664          IDEINTEG.asm:250
+at1     = $0498 =  1176          IDEINTEG.asm:251
+b_coin  = $0001 =     1          IDEINTEG.asm:17 (unused)
+b_cout  = $0002 =     2          IDEINTEG.asm:18 (unused)
+b_exit  = $0000 =     0          IDEINTEG.asm:16
+b_print = $0009 =     9          IDEINTEG.asm:19
+bdos    = $0005 =     5          IDEINTEG.asm:14
+block   = $0209 =   521          IDEINTEG.asm:215
+compare = $0149 =   329          IDEINTEG.asm:72
+cycle   = $0128 =   296          IDEINTEG.asm:53
+heap    = $0298 =   664          IDEINTEG.asm:247
+id_base = $00C0 =   192          IDEINTEG.asm:21
+id_busy = $01E0 =   480          IDEINTEG.asm:173
+id_comm = $01D8 =   472          IDEINTEG.asm:163
+id_rph0 = $01C4 =   452          IDEINTEG.asm:142
+id_rphy = $01B1 =   433          IDEINTEG.asm:134
+id_stal = $01ED =   493          IDEINTEG.asm:185
+id_wdrq = $01D1 =   465          IDEINTEG.asm:154
+next    = $0192 =   402          IDEINTEG.asm:109
+parm0   = $0240 =   576          IDEINTEG.asm:232
+parm1   = $0248 =   584          IDEINTEG.asm:234
+parm2   = $0250 =   592          IDEINTEG.asm:236
+parm3   = $0258 =   600          IDEINTEG.asm:238
+s_alert = $0236 =   566          IDEINTEG.asm:230
+s_nosel = $021C =   540          IDEINTEG.asm:227
+s_pass  = $020C =   524          IDEINTEG.asm:224
+splash  = $025F =   607          IDEINTEG.asm:241
+start   = $0100 =   256          IDEINTEG.asm:27 (unused)
+tohex   = $01F2 =   498          IDEINTEG.asm:195
+tsaddr  = $020A =   522          IDEINTEG.asm:218
+
+
+total time: 0.0470 sec.
+no errors
