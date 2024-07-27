@@ -29,9 +29,6 @@ start:	di
 	ld	de,splash
 	call	bdos
 	
-	; TODO: remove
-	jp	cycle
-	
 	; Select IDE drive
 	ld	a,0xE0
 	out	(id_base+0xC),a
@@ -50,8 +47,7 @@ start:	di
 	
 	; Do a pass of the test
 	; Set upeer address registers
-cycle:	jp	9$
-	xor	a
+cycle:	xor	a
 	out	(id_base+0x8),a
 	out	(id_base+0xA),a
 	
@@ -68,7 +64,7 @@ cycle:	jp	9$
 	call	id_rphy
 	
 	; Compare
-9$:	ld	de,at0
+	ld	de,at0
 compare:ld	hl,512
 	add	hl,de
 	ld	a,(de)
