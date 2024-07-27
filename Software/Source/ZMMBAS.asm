@@ -84,6 +84,11 @@ test1:	ld	c,b_print
 	ld	de,s_pass
 	call	bdos
 	
+	; Test #2
+test1:	ld	c,b_print
+	ld	de,s_test2
+	call	bdos
+	
 	; Done
 	ld	c,b_exit
 	call	bdos
@@ -103,3 +108,6 @@ s_test0:
 	
 s_test1:
 	defb	'TEST 1: Check memory overlay: $'
+	
+s_test2:
+	defb	'TEST 2: Check memory paging: $'
