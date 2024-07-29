@@ -48,7 +48,7 @@ module assembly(
 wire [2:0] ctrl_register;
 
 // Define activation condition for the mapper I/O space
-wire mapper_io = io_enable && !iorq_n;
+wire mapper_io = io_enable && !iorq_n && m1_n;
 
 // Define activation condition for reading the instruction register
 wire read_isr_en = mapper_io && !lo_addr[2] && !lo_addr[1] && !lo_addr[0];
