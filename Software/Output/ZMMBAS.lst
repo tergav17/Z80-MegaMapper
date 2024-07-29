@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "ZMMBAS.asm"
-              	; date: 2024-07-20 01:27:41
+              	; date: 2024-07-29 00:01:15
               	; --------------------------------------
 
 
@@ -23,9 +23,17 @@
 0002:         	b_cout	equ	0x02
 0009:         	b_print	equ	0x09
               	
+0030:         	zm_bnk0	equ	0x30
+0031:         	zm_bnk1	equ	0x31
+0032:         	zm_bnk2	equ	0x32
+0033:         	zm_bnk3	equ	0x33
 0034:         	zm_ctrl	equ	0x34
-              	
+0030:         	zm_isr	equ	0x30
+0032:         	zm_a_lo	equ	0x32
+0033:         	zm_a_hi	equ	0x33
+0037:         	zm_trap	equ	0x37 
 8000:         	zm_map	equ	0x8000
+C000:         	zm_top	equ	0xC000
               	
               	; Program start
 0100:         		org	0x0100
@@ -33,12 +41,12 @@
               		; Print "hello" splash
 0100: F3      	start:	di
 0101: 0E09    		ld	c,b_print
-0103: 116A01  		ld	de,splash
+0103: 11DA01  		ld	de,splash
 0106: CD0500  		call	bdos
               		
               		; Test #0
 0109: 0E09    	test0:	ld	c,b_print
-010B: 11AA01  		ld	de,s_test0
+010B: 111A02  		ld	de,s_test0
 010E: CD0500  		call	bdos
               		
               		; Set up passthru table for mapper mode
@@ -59,115 +67,228 @@
 0129: 3E00    		ld	a,0b00000000
 012B: D334    		out	(zm_ctrl),a
 012D: 0E09    		ld	c,b_print
-012F: 11A301  		ld	de,s_pass
+012F: 111302  		ld	de,s_pass
 0132: CD0500  		call	bdos
               		
-              		; Pass
-0135: 0E09    		ld	c,b_print
-0137: 11A301  		ld	de,s_pass
+              		; Test #1
+0135: 0E09    	test1:	ld	c,b_print
+0137: 113802  		ld	de,s_test1
 013A: CD0500  		call	bdos
               		
-              		; Test #1
-013D: 0E09    	test1:	ld	c,b_print
-013F: 11DF01  		ld	de,s_test1
-0142: CD0500  		call	bdos
-              		
               		; Zero out top 16K of memory
-0145: 3E01    		ld	a,0b00000001
-0147: D334    		out	(zm_ctrl),a
-0149: 210080  		ld	hl,zm_map
-014C: 2100C0  		ld	hl,0xC000
-014F: 1101C0  		ld	de,0xC001
-0152: 01FF3F  		ld	bc,0x4000-1
-0155: AF      		xor	a
-0156: 77      		ld	(hl),a
-0157: EDB0    		ldir
+013D: 3E01    		ld	a,0b00000001
+013F: D334    		out	(zm_ctrl),a
+0141: 2100C0  		ld	hl,zm_top
+0144: 1101C0  		ld	de,zm_top+1 
+0147: 01FF3F  		ld	bc,0x4000-1
+014A: AF      		xor	a
+014B: 77      		ld	(hl),a
+014C: EDB0    		ldir
               		
               		; Disable mapper mode
-0159: 3E00    		ld	a,0b00000000
-015B: D334    		out	(zm_ctrl),a
-015D: 0E09    		ld	c,b_print
-015F: 11A301  		ld	de,s_pass
-0162: CD0500  		call	bdos
+014E: 3E00    		ld	a,0b00000000
+0150: D334    		out	(zm_ctrl),a
+0152: 0E09    		ld	c,b_print
+0154: 111302  		ld	de,s_pass
+0157: CD0500  		call	bdos
+              		
+              		; Test #2
+015A: 0E09    	test2:	ld	c,b_print
+015C: 115702  		ld	de,s_test2
+015F: CD0500  		call	bdos
+              		
+              		; Enable mapper mode
+0162: 3E01    		ld	a,0b00000001
+0164: D334    		out	(zm_ctrl),a
+              		
+              		; Write tags to all pages
+0166: 0600    		ld	b,0
+0168: 78      	0$:	ld	a,b
+0169: D333    		out	(zm_bnk3),a
+016B: 3200C0  		ld	(zm_top),a
+016E: ED44    		neg
+0170: 3201C0  		ld	(zm_top+1),a
+0173: 04      		inc	b
+0174: C26801  		jp	nz,0$
+              		
+              		; Mark any banks that record correctly
+0177: 0600    		ld	b,0
+0179: 217802  		ld	hl,bankmap
+017C: AF      	1$:	xor	a
+017D: 77      		ld	(hl),a
+017E: 78      		ld	a,b
+017F: D333    		out	(zm_bnk3),a
+0181: 3A00C0  		ld	a,(zm_top)
+0184: B8      		cp	b
+0185: C29601  		jp	nz,2$
+0188: 3A01C0  		ld	a,(zm_top+1)
+018B: 4F      		ld	c,a
+018C: 78      		ld	a,b
+018D: ED44    		neg
+018F: B9      		cp	c
+0190: C29601  		jp	nz,2$
+              		
+              		; Mark it
+0193: 3EFF    		ld	a,0xFF
+0195: 77      		ld	(hl),a
+              		
+              		; Next
+0196: 23      	2$:	inc	hl
+0197: 04      		inc	b
+0198: C27C01  		jp	nz,1$
+              		
+              		; Disable mapper mode
+019B: 3E00    		ld	a,0b00000000
+019D: D334    		out	(zm_ctrl),a
+              		
+              		; Now try to print everything out
+019F: 217802  		ld	hl,bankmap
+01A2: 0620    		ld	b,32
+01A4: 0E08    		ld	c,8
+              		
+              		; Get bankmap value and set register E
+01A6: 1E2E    	3$:	ld	e,'.'
+01A8: 7E      		ld	a,(hl)
+01A9: B7      		or	a
+01AA: CAAF01  		jp	z,4$
+01AD: 1E58    		ld	e,'X'
+              	
+              		; Print character
+01AF: C5      	4$:	push	bc
+01B0: E5      		push	hl
+01B1: 0E02    		ld	c,b_cout
+01B3: CD0500  		call	bdos
+01B6: E1      		pop	hl
+01B7: C1      		pop	bc
+              		
+              		; Do another?
+01B8: 23      		inc	hl
+01B9: 10EB    		djnz	3$
+              	
+              		; Print CRLF
+01BB: C5      		push	bc
+01BC: E5      		push	hl
+01BD: 0E09    		ld	c,b_print
+01BF: 117502  		ld	de,s_crlf
+01C2: CD0500  		call	bdos
+01C5: E1      		pop	hl
+01C6: C1      		pop	bc
+              		
+              		; New line maybe
+01C7: 0620    		ld	b,32
+01C9: 0D      		dec	c
+01CA: C2A601  		jp	nz,3$
+              		
+              		; Pass
+01CD: 0E09    		ld	c,b_print
+01CF: 111302  		ld	de,s_pass
+01D2: CD0500  		call	bdos
               		
               		; Done
-0165: 0E00    		ld	c,b_exit
-0167: CD0500  		call	bdos
+01D5: 0E00    		ld	c,b_exit
+01D7: CD0500  		call	bdos
               		
               	
               	; Strings
               		
-016A:         	splash:
-016A: 5A4D4D20		defb	'ZMM Basic Functionality Test',0x0A,0x0D
-016E: 42617369	
-0172: 63204675	
-0176: 6E637469	
-017A: 6F6E616C	
-017E: 69747920	
-0182: 54657374	
-0186: 0A0D    	
-0188: 52657620		defb	'Rev 1a, tergav17 (Gavin)',0x0A,0x0D,'$' 
-018C: 31612C20	
-0190: 74657267	
-0194: 61763137	
-0198: 20284761	
-019C: 76696E29	
-01A0: 0A0D24  	
+01DA:         	splash:
+01DA: 5A4D4D20		defb	'ZMM Basic Functionality Test',0x0A,0x0D
+01DE: 42617369	
+01E2: 63204675	
+01E6: 6E637469	
+01EA: 6F6E616C	
+01EE: 69747920	
+01F2: 54657374	
+01F6: 0A0D    	
+01F8: 52657620		defb	'Rev 1a, tergav17 (Gavin)',0x0A,0x0D,'$' 
+01FC: 31612C20	
+0200: 74657267	
+0204: 61763137	
+0208: 20284761	
+020C: 76696E29	
+0210: 0A0D24  	
               		
-01A3:         	s_pass:
-01A3: 50415353		defb	'PASS',0x0A,0x0D,'$'
-01A7: 0A0D24  	
+0213:         	s_pass:
+0213: 50415353		defb	'PASS',0x0A,0x0D,'$'
+0217: 0A0D24  	
               		
-01AA:         	s_test0:
-01AA: 54455354		defb	'TEST 0: Basic instruction set mapping sanity check: $'
-01AE: 20303A20	
-01B2: 42617369	
-01B6: 6320696E	
-01BA: 73747275	
-01BE: 6374696F	
-01C2: 6E207365	
-01C6: 74206D61	
-01CA: 7070696E	
-01CE: 67207361	
-01D2: 6E697479	
-01D6: 20636865	
-01DA: 636B3A20	
-01DE: 24      	
+021A:         	s_test0:
+021A: 54455354		defb	'TEST 0: Check mapping basic: $'
+021E: 20303A20	
+0222: 43686563	
+0226: 6B206D61	
+022A: 7070696E	
+022E: 67206261	
+0232: 7369633A	
+0236: 2024    	
               		
-01DF:         	s_test1:
-01DF: 54455354		defb	'TEST 1: Check memory overlay: $'
-01E3: 20313A20	
-01E7: 43686563	
-01EB: 6B206D65	
-01EF: 6D6F7279	
-01F3: 206F7665	
-01F7: 726C6179	
-01FB: 3A2024  	
+0238:         	s_test1:
+0238: 54455354		defb	'TEST 1: Check memory overlay: $'
+023C: 20313A20	
+0240: 43686563	
+0244: 6B206D65	
+0248: 6D6F7279	
+024C: 206F7665	
+0250: 726C6179	
+0254: 3A2024  	
+              		
+0257:         	s_test2:
+0257: 54455354		defb	'TEST 2: Check memory paging...'
+025B: 20323A20	
+025F: 43686563	
+0263: 6B206D65	
+0267: 6D6F7279	
+026B: 20706167	
+026F: 696E672E	
+0273: 2E2E    	
+              		
+0275:         	s_crlf:	
+0275: 0A0D24  		defb	0x0A,0x0D,'$'
+              		
+              	; Heap
+0278:         	heap:
+              	
+              	; Area to keep track of allocated banks
+0278:         	bankmap	equ	heap	; 256 bytes
 
 
 ; +++ segments +++
 
-#CODE          = $0100 =   256,  size = $00FE =   254
+#CODE          = $0100 =   256,  size = $0178 =   376
 
 ; +++ global symbols +++
 
-_end    = $01FE =   510          ZMMBAS.asm:25 (unused)
-_size   = $00FE =   254          ZMMBAS.asm:25 (unused)
+_end    = $0278 =   632          ZMMBAS.asm:33 (unused)
+_size   = $0178 =   376          ZMMBAS.asm:33 (unused)
 b_coin  = $0001 =     1          ZMMBAS.asm:16 (unused)
-b_cout  = $0002 =     2          ZMMBAS.asm:17 (unused)
+b_cout  = $0002 =     2          ZMMBAS.asm:17
 b_exit  = $0000 =     0          ZMMBAS.asm:15
 b_print = $0009 =     9          ZMMBAS.asm:18
+bankmap = $0278 =   632          ZMMBAS.asm:211
 bdos    = $0005 =     5          ZMMBAS.asm:13
-s_pass  = $01A3 =   419          ZMMBAS.asm:98
-s_test0 = $01AA =   426          ZMMBAS.asm:101
-s_test1 = $01DF =   479          ZMMBAS.asm:104
-splash  = $016A =   362          ZMMBAS.asm:94
-start   = $0100 =   256          ZMMBAS.asm:28 (unused)
-test0   = $0109 =   265          ZMMBAS.asm:34 (unused)
-test1   = $013D =   317          ZMMBAS.asm:65 (unused)
-zm_ctrl = $0034 =    52          ZMMBAS.asm:20
-zm_map  = $8000 = 32768          ZMMBAS.asm:22
+heap    = $0278 =   632          ZMMBAS.asm:208
+s_crlf  = $0275 =   629          ZMMBAS.asm:204
+s_pass  = $0213 =   531          ZMMBAS.asm:192
+s_test0 = $021A =   538          ZMMBAS.asm:195
+s_test1 = $0238 =   568          ZMMBAS.asm:198
+s_test2 = $0257 =   599          ZMMBAS.asm:201
+splash  = $01DA =   474          ZMMBAS.asm:188
+start   = $0100 =   256          ZMMBAS.asm:36 (unused)
+test0   = $0109 =   265          ZMMBAS.asm:42 (unused)
+test1   = $0135 =   309          ZMMBAS.asm:68 (unused)
+test2   = $015A =   346          ZMMBAS.asm:90 (unused)
+zm_a_hi = $0033 =    51          ZMMBAS.asm:27 (unused)
+zm_a_lo = $0032 =    50          ZMMBAS.asm:26 (unused)
+zm_bnk0 = $0030 =    48          ZMMBAS.asm:20 (unused)
+zm_bnk1 = $0031 =    49          ZMMBAS.asm:21 (unused)
+zm_bnk2 = $0032 =    50          ZMMBAS.asm:22 (unused)
+zm_bnk3 = $0033 =    51          ZMMBAS.asm:23
+zm_ctrl = $0034 =    52          ZMMBAS.asm:24
+zm_isr  = $0030 =    48          ZMMBAS.asm:25 (unused)
+zm_map  = $8000 = 32768          ZMMBAS.asm:29
+zm_top  = $C000 = 49152          ZMMBAS.asm:30
+zm_trap = $0037 =    55          ZMMBAS.asm:28 (unused)
 
 
-total time: 0.0242 sec.
+total time: 0.0398 sec.
 no errors

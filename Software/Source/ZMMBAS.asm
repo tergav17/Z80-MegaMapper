@@ -17,9 +17,17 @@ b_coin	equ	0x01
 b_cout	equ	0x02
 b_print	equ	0x09
 
+zm_bnk0	equ	0x30
+zm_bnk1	equ	0x31
+zm_bnk2	equ	0x32
+zm_bnk3	equ	0x33
 zm_ctrl	equ	0x34
-
+zm_isr	equ	0x30
+zm_a_lo	equ	0x32
+zm_a_hi	equ	0x33
+zm_trap	equ	0x37 
 zm_map	equ	0x8000
+zm_top	equ	0xC000
 
 ; Program start
 	org	0x0100
@@ -56,11 +64,6 @@ test0:	ld	c,b_print
 	ld	de,s_pass
 	call	bdos
 	
-	; Pass
-	ld	c,b_print
-	ld	de,s_pass
-	call	bdos
-	
 	; Test #1
 test1:	ld	c,b_print
 	ld	de,s_test1
@@ -69,9 +72,8 @@ test1:	ld	c,b_print
 	; Zero out top 16K of memory
 	ld	a,0b00000001
 	out	(zm_ctrl),a
-	ld	hl,zm_map
-	ld	hl,0xC000
-	ld	de,0xC001
+	ld	hl,zm_top
+	ld	de,zm_top+1 
 	ld	bc,0x4000-1
 	xor	a
 	ld	(hl),a
@@ -85,8 +87,95 @@ test1:	ld	c,b_print
 	call	bdos
 	
 	; Test #2
-test1:	ld	c,b_print
+test2:	ld	c,b_print
 	ld	de,s_test2
+	call	bdos
+	
+	; Enable mapper mode
+	ld	a,0b00000001
+	out	(zm_ctrl),a
+	
+	; Write tags to all pages
+	ld	b,0
+0$:	ld	a,b
+	out	(zm_bnk3),a
+	ld	(zm_top),a
+	neg
+	ld	(zm_top+1),a
+	inc	b
+	jp	nz,0$
+	
+	; Mark any banks that record correctly
+	ld	b,0
+	ld	hl,bankmap
+1$:	xor	a
+	ld	(hl),a
+	ld	a,b
+	out	(zm_bnk3),a
+	ld	a,(zm_top)
+	cp	b
+	jp	nz,2$
+	ld	a,(zm_top+1)
+	ld	c,a
+	ld	a,b
+	neg
+	cp	c
+	jp	nz,2$
+	
+	; Mark it
+	ld	a,0xFF
+	ld	(hl),a
+	
+	; Next
+2$:	inc	hl
+	inc	b
+	jp	nz,1$
+	
+	; Disable mapper mode
+	ld	a,0b00000000
+	out	(zm_ctrl),a
+	
+	; Now try to print everything out
+	ld	hl,bankmap
+	ld	b,32
+	ld	c,8
+	
+	; Get bankmap value and set register E
+3$:	ld	e,'.'
+	ld	a,(hl)
+	or	a
+	jp	z,4$
+	ld	e,'X'
+
+	; Print character
+4$:	push	bc
+	push	hl
+	ld	c,b_cout
+	call	bdos
+	pop	hl
+	pop	bc
+	
+	; Do another?
+	inc	hl
+	djnz	3$
+
+	; Print CRLF
+	push	bc
+	push	hl
+	ld	c,b_print
+	ld	de,s_crlf
+	call	bdos
+	pop	hl
+	pop	bc
+	
+	; New line maybe
+	ld	b,32
+	dec	c
+	jp	nz,3$
+	
+	; Pass
+	ld	c,b_print
+	ld	de,s_pass
 	call	bdos
 	
 	; Done
@@ -104,10 +193,19 @@ s_pass:
 	defb	'PASS',0x0A,0x0D,'$'
 	
 s_test0:
-	defb	'TEST 0: Basic instruction set mapping sanity check: $'
+	defb	'TEST 0: Check mapping basic: $'
 	
 s_test1:
 	defb	'TEST 1: Check memory overlay: $'
 	
 s_test2:
-	defb	'TEST 2: Check memory paging: $'
+	defb	'TEST 2: Check memory paging...'
+	
+s_crlf:	
+	defb	0x0A,0x0D,'$'
+	
+; Heap
+heap:
+
+; Area to keep track of allocated banks
+bankmap	equ	heap	; 256 bytes
