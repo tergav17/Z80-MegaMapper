@@ -29,6 +29,12 @@ zm_trap	equ	0x37
 zm_map	equ	0x8000
 zm_top	equ	0xC000
 
+zm_sset	equ	0b10000000
+zm_sres	equ	0b01110000
+
+nmi_adr	equ	0X0066
+nmi_vec	equ	nmi_adr+1
+
 ; Program start
 	org	0x0100
 	
@@ -43,7 +49,7 @@ test0:	ld	c,b_print
 	ld	de,s_test0
 	call	bdos
 	
-	; Set up passthru table for mapper mode
+	; Set up passthru table for virtual mode
 	ld	a,0b00000001
 	out	(zm_ctrl),a
 	ld	hl,zm_map
@@ -57,7 +63,7 @@ test0:	ld	c,b_print
 	inc	l
 	jp	nz,1$
 	
-	; Disable mapper mode
+	; Disable virtual mode
 	ld	a,0b00000000
 	out	(zm_ctrl),a
 	ld	c,b_print
@@ -79,7 +85,7 @@ test1:	ld	c,b_print
 	ld	(hl),a
 	ldir
 	
-	; Disable mapper mode
+	; Disable virtual mode
 	ld	a,0b00000000
 	out	(zm_ctrl),a
 	ld	c,b_print
@@ -91,7 +97,7 @@ test2:	ld	c,b_print
 	ld	de,s_test2
 	call	bdos
 	
-	; Enable mapper mode
+	; Enable virtual mode
 	ld	a,0b00000001
 	out	(zm_ctrl),a
 	
@@ -131,7 +137,7 @@ test2:	ld	c,b_print
 	inc	b
 	jp	nz,1$
 	
-	; Disable mapper mode
+	; Disable virtual mode
 	ld	a,0b00000000
 	out	(zm_ctrl),a
 	
@@ -178,19 +184,147 @@ test2:	ld	c,b_print
 	ld	de,s_pass
 	call	bdos
 	
-	; Done
-	ld	c,b_exit
+	; Test #3
+test3:	ld	c,b_print
+	ld	de,s_test3
 	call	bdos
+	
+	; Start checking bank map for 2 valid banks
+	ld	b,0
+	ld	hl,bankmap
+	
+0$:	ld	a,(hl)
+	or	a
+	jp	nz,1$
+	inc	hl
+	inc	b
+	jp	nz,0$
+	
+	; Fail!
+	ld	c,b_print
+	ld	de,s_fail
+	call	bdos
+	jp	exit
+
+	; Save to text bank
+1$:	ld	a,b
+	ld	(textbank),a
+	jp	3$
+	
+2$:	ld	a,(hl)
+	or	a
+	jp	nz,4$
+3$:	inc	hl
+	inc	b
+	jp	nz,2$
+	
+	; Fail!
+	ld	c,b_print
+	ld	de,s_fail
+	call	bdos
+	jp	exit
+
+	; Pass
+4$:	ld	a,b
+	ld	(databank),a
+	ld	c,b_print
+	ld	de,s_pass
+	call	bdos
+	
+	; Test #4
+test4:	ld	c,b_print
+	ld	de,s_test4
+	call	bdos
+	
+	; Set bank 3 to textbank
+	ld	a,(textbank)
+	out	(zm_bnk3),a
+	
+	; Install NMI handler
+	ld	a,0xC3
+	ld	(nmi_adr),a
+	
+	; Enable virtual mode
+	ld	a,0b00000001
+	out	(zm_ctrl),a
+	
+	; Copy snippet to virtual memory
+	ld	hl,snip0
+	ld	de,zm_top
+	ld	bc,snip0_e-snip0
+	ldir
+	
+	; Punch in entry address
+	ld	hl,0
+	add	hl,sp
+	ld	a,zm_sres
+	and	h
+	or	zm_sset
+	ld	h,a
+	ld	(hl),zm_top&0xFF
+	inc	hl
+	ld	a,zm_sres
+	and	h
+	or	zm_sset
+	ld	h,a
+	ld	(hl),zm_top>>8
+	
+	; Place vector
+	ld	hl,1$
+	ld	b,0
+	ld	(nmi_vec),hl
+	
+	; Kick off RETN to reset trap mode
+	retn
+0$:	jp	0$
+
+	; We should end up here
+1$:	dec	b
+	dec	b
+	jp	z,2$
+	
+	; Fail!
+	ld	c,b_print
+	ld	de,s_fail
+	call	bdos
+	jp	exit
+
+	; Disable virtual mode and pass
+2$:	ld	a,0b00000000
+	out	(zm_ctrl),a
+	ld	c,b_print
+	ld	de,s_pass
+	call	bdos
+	
+	; Done
+exit:	ld	c,b_exit
+	call	bdos
+	
+	
+; Snippets
+snip0:
+
+	; Play with register B, and then trap out
+	ld	b,1
+	nop
+	ld	b,2
+	in	a,(zm_trap)
+	ld	b,3
+0$:	jr	0$
+
+snip0_e:
 	
 
 ; Strings
-	
 splash:
 	defb	'ZMM Basic Functionality Test',0x0A,0x0D
 	defb	'Rev 1a, tergav17 (Gavin)',0x0A,0x0D,'$' 
 	
 s_pass:
 	defb	'PASS',0x0A,0x0D,'$'
+	
+s_fail:
+	defb	'FAIL',0x0A,0x0D,'$'
 	
 s_test0:
 	defb	'TEST 0: Check mapping basic: $'
@@ -199,10 +333,23 @@ s_test1:
 	defb	'TEST 1: Check memory overlay: $'
 	
 s_test2:
-	defb	'TEST 2: Check memory paging...'
+	defb	'TEST 2: Check memory banking...'
 	
 s_crlf:	
 	defb	0x0A,0x0D,'$'
+	
+s_test3:
+	defb	'TEST 3: Check bank map... $'
+	
+s_test4:
+	defb	'TEST 4: Trap engagement... $'
+	
+; Variables
+textbank:
+	defb	0
+	
+databank:
+	defb	0
 	
 ; Heap
 heap:
