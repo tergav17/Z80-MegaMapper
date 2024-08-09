@@ -57,7 +57,7 @@ assign nmi_n = !trap_pending || trap_state_r;
 
 // If an I/O violation occures while trap mode is reset, the set the flag
 // Otherwise, an I/O violation during trap mode will reset the flag
-always @(negedge io_violation)
+always @(posedge io_violation)
 begin
    io_violation_occured_r = !trap_state_r;
 end
