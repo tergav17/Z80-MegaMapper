@@ -29,17 +29,22 @@ zm_trap	equ	0x37
 zm_map	equ	0x8000
 zm_top	equ	0xC000
 
-zm_sset	equ	0b10000000
-zm_sres	equ	0b01110000
+zm_sset	equ	0b01110000
+zm_sres	equ	0b01111111
 
 nmi_adr	equ	0X0066
 nmi_vec	equ	nmi_adr+1
+
+nb_nctl	equ	0x00		; Control Register
+nb_ayda	equ	0x40		; AY-3-8910 data port
+nb_atla	equ	0x41		; AY-3-8910 latch port
 
 ; Program start
 	org	0x0100
 	
 	; Print "hello" splash
 start:	di
+	ld	sp,0x4000
 	ld	c,b_print
 	ld	de,splash
 	call	bdos
@@ -201,10 +206,7 @@ test3:	ld	c,b_print
 	jp	nz,0$
 	
 	; Fail!
-	ld	c,b_print
-	ld	de,s_fail
-	call	bdos
-	jp	exit
+	jp	fail
 
 	; Save to text bank
 1$:	ld	a,b
@@ -219,10 +221,7 @@ test3:	ld	c,b_print
 	jp	nz,2$
 	
 	; Fail!
-	ld	c,b_print
-	ld	de,s_fail
-	call	bdos
-	jp	exit
+	jp	fail
 
 	; Pass
 4$:	ld	a,b
@@ -235,6 +234,9 @@ test3:	ld	c,b_print
 test4:	ld	c,b_print
 	ld	de,s_test4
 	call	bdos
+	
+	; Disable interrupts
+	call	intoff
 	
 	; Set bank 3 to textbank
 	ld	a,(textbank)
@@ -255,6 +257,8 @@ test4:	ld	c,b_print
 	ldir
 	
 	; Punch in entry address
+	ld	hl,fail
+	push 	hl
 	ld	hl,0
 	add	hl,sp
 	ld	a,zm_sres
@@ -275,23 +279,24 @@ test4:	ld	c,b_print
 	ld	(nmi_vec),hl
 	
 	; Kick off RETN to reset trap mode
+	out	(zm_trap),a
+	nop
 	retn
-0$:	jp	0$
+	jp	fail
 
 	; We should end up here
-1$:	dec	b
-	dec	b
-	jp	z,2$
-	
-	; Fail!
-	ld	c,b_print
-	ld	de,s_fail
-	call	bdos
-	jp	exit
-
-	; Disable virtual mode and pass
-2$:	ld	a,0b00000000
+1$:	ld	a,0b00000000
 	out	(zm_ctrl),a
+
+	; Check register B
+	ld	a,b
+	call	tohex
+	ld	(s_nfail),de
+	dec	b
+	dec	b
+	jp	nz,fail
+
+	; Pass
 	ld	c,b_print
 	ld	de,s_pass
 	call	bdos
@@ -300,17 +305,87 @@ test4:	ld	c,b_print
 exit:	ld	c,b_exit
 	call	bdos
 	
+	; Fail!
+fail:	ld	a,0b00000000
+	out	(zm_ctrl),a
+	ld	c,b_print
+	ld	de,s_nfail
+	call	bdos
+	jp	exit
+	
+; Converts the value into an 8 bit hex number
+; A = Number to convert
+;
+; Returns DE = result
+; uses: DE
+tohex:	ld	d,a
+	call	0$
+	ld	e,a
+	ld	a,d
+	call	1$
+	ld	d,a
+	ret
+	
+0$:	rra
+	rra
+	rra
+	rra
+1$:	or	0xF0
+	daa
+	add	a,0xA0
+	adc	a,0x40
+	ret
+	
+; Turns off all maskable interrupts to stop traps from occuring
+intoff:	ld	a,0x07
+	out	(nb_atla),a	; AY register = 7
+	in	a,(nb_ayda)
+	and	0x3F
+	or	0x40
+	out	(nb_ayda),a	; Configure AY port I/O
+	
+	ld	a,0x0E
+	out	(nb_atla),a	; AY register = 14
+	ld	a,0x00
+	out	(nb_ayda),a	; All interrupts disabled
+	ret
+	
 	
 ; Snippets
 snip0:
 
 	; Play with register B, and then trap out
+	nop
 	ld	b,1
 	nop
 	ld	b,2
 	in	a,(zm_trap)
 	ld	b,3
-0$:	jr	0$
+
+	; Blink light
+0$:	ld	a,0x11
+	out	(nb_nctl),a
+	
+	ld	bc,0
+1$:	nop
+	nop
+	nop
+	nop
+	djnz	1$
+	dec	c
+	jr	nz,1$
+	
+	ld	a,0x01
+	out	(nb_nctl),a
+	
+2$:	nop
+	nop
+	nop
+	nop
+	djnz	2$
+	dec	c
+	jr	nz,2$
+	jr	0$
 
 snip0_e:
 	
@@ -322,6 +397,9 @@ splash:
 	
 s_pass:
 	defb	'PASS',0x0A,0x0D,'$'
+	
+s_nfail
+	defb	'XX '
 	
 s_fail:
 	defb	'FAIL',0x0A,0x0D,'$'
