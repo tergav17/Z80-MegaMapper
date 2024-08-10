@@ -25,6 +25,7 @@ module modes(
     input new_isr,
     input last_isr_untrap,
     input virtual_enabled,
+	 input irq_intercept,
     output io_violation_occured,
     output trap_state,
     output nmi_n,
@@ -49,13 +50,13 @@ assign trap_state = trap_state_r;
 assign capture_address = capture_latch_r || (last_isr_untrap && trap_state && virtual_enabled);
 assign io_violation_occured = io_violation_occured_r;
 
-// A trap can said to be pending when either there is an interrupt waiting, or a I/O violation has been observed
-wire trap_pending = io_violation_occured_r || !irq_sync_r;
+// A trap can said to be pending when either there is an interrupt waiting, or an I/O violation has been observed
+wire trap_pending = io_violation_occured_r || (!irq_sync_r && irq_intercept);
 
-// An NMI should only be asserted what trap state is reset
+// A NMI should only be asserted when trap state is reset
 assign nmi_n = !trap_pending || trap_state_r;
 
-// If an I/O violation occures while trap mode is reset, the set the flag
+// If an I/O violation occures while trap mode is reset, then set the flag
 // Otherwise, an I/O violation during trap mode will reset the flag
 always @(posedge io_violation)
 begin

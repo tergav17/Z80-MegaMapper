@@ -45,7 +45,7 @@ module assembly(
     output trans_direction
     );
 
-wire [2:0] ctrl_register;
+wire [3:0] ctrl_register;
 
 // Define activation condition for the mapper I/O space
 wire mapper_io = io_enable && !iorq_n && m1_n;
@@ -71,8 +71,9 @@ wire io_direction;
 
 // Define control register bits
 wire virtual_enable = ctrl_register[0];
-wire force_irq = ctrl_register[1];
-wire set_trans_direction = ctrl_register[2];
+wire set_trans_direction = ctrl_register[1];
+wire irq_intercept = ctrl_register[1];
+wire force_irq = ctrl_register[3];
 
 // We should capture the current "real" address everytime there is an I/O violation
 assign trap_addr_wr_n = !io_violation_cond;
@@ -83,7 +84,7 @@ assign trap_addr_rd_n = !(mapper_io && !lo_addr[2] && lo_addr[1]) || rd_n;
 // For wehn we want to write to the bank registers
 assign bank_wr_n = !(mapper_io && !lo_addr[2]) || wr_n;
 
-// Suppress I/O when in mapper I/O space
+// Supress I/O when in mapper I/O space
 assign iorq_sys_n = iorq_n || mapper_io;
 
 // Supress memory accesses when external memory or writing to the translation table
@@ -94,11 +95,11 @@ assign trans_wr_n = !mreq_override_cond || mreq_n || !(trap_state && !hi_addr[0]
 assign xmem_sel_n = !mreq_override_cond || mreq_n || (trap_state && !hi_addr[0]);
 
 // When the trap state is reset, maskable interrupts should be controlled by the control register
-assign irq_n = trap_state ? irq_sys_n : !force_irq;
+assign irq_n = (trap_state || !irq_intercept) ? irq_sys_n : !force_irq;
 
-// Address translations should always be done if virtualization is enabled
+// Address translations should always be done if virtualization is enabled and trap state is disabled
 // Unless a memory I/O access in incoming, of course
-assign trans_addr = virtual_enable && mreq_n && refresh_n;
+assign trans_addr = virtual_enable && !trap_state && mreq_n && refresh_n;
 
 // If we are doing a memory request, the direction page of the translation
 // table will be determined by the control register. Otherwise it is controlled
@@ -115,6 +116,6 @@ registers reg_0(data, wr_n, rd_n, m1_n, !trap_state, read_isr_en, write_ctrl_en,
 opcode opcode_0(data, m1_n, capture_addr, new_isr, last_isr_untrap, io_direction);
 
 // Create instance of mode logic
-modes modes_0(io_violation_cond, irq_sys_n, m1_n, new_isr, last_isr_untrap, virtual_enable, io_violation_occured, trap_state, nmi_n, capture_addr);
+modes modes_0(io_violation_cond, irq_sys_n, m1_n, new_isr, last_isr_untrap, virtual_enable, irq_intercept, io_violation_occured, trap_state, nmi_n, capture_addr);
 
 endmodule

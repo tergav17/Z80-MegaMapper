@@ -28,11 +28,11 @@ module registers(
     input write_ctrl_en,
     input reset_n,
     input io_violation_occured,
-    output [2:0] ctrl_out
+    output [3:0] ctrl_out
     );
 
 // Define control and instruction registers
-reg[2:0] ctrl_reg;
+reg[3:0] ctrl_reg;
 reg[6:0] isr_reg;
 
 // Logic for reading the control register
@@ -42,9 +42,9 @@ assign ctrl_out = ctrl_reg;
 always @(posedge wr_n or negedge reset_n)
 begin
    if (!reset_n)
-      ctrl_reg = 3'b000;
+      ctrl_reg = 4'b0000;
    else if (write_ctrl_en)
-      ctrl_reg = data[2:0];
+      ctrl_reg = data[3:0];
 end
 
 // Logic for reading the output register
