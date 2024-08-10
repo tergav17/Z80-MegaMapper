@@ -61,7 +61,7 @@ test0:	ld	c,b_print
 0$:	ld	(hl),l
 	inc	l
 	jp	nz,0$
-	ld	a,0b00000101
+	ld	a,0b00000011
 	out	(zm_ctrl),a
 	ld	hl,zm_map
 1$:	ld	(hl),l
@@ -235,9 +235,6 @@ test4:	ld	c,b_print
 	ld	de,s_test4
 	call	bdos
 	
-	; Disable interrupts
-	call	intoff
-	
 	; Set bank 3 to textbank
 	ld	a,(textbank)
 	out	(zm_bnk3),a
@@ -253,25 +250,16 @@ test4:	ld	c,b_print
 	; Copy snippet to virtual memory
 	ld	hl,snip0
 	ld	de,zm_top
-	ld	bc,snip0_e-snip0
+	ld	bc,snip0_end-snip0
 	ldir
 	
-	; Punch in entry address
+	; Just incase of a hardware failure
 	ld	hl,fail
 	push 	hl
-	ld	hl,0
-	add	hl,sp
-	ld	a,zm_sres
-	and	h
-	or	zm_sset
-	ld	h,a
-	ld	(hl),zm_top&0xFF
-	inc	hl
-	ld	a,zm_sres
-	and	h
-	or	zm_sset
-	ld	h,a
-	ld	(hl),zm_top>>8
+	
+	; Punch in entry address
+	ld	de,zm_top
+	call	trapset
 	
 	; Place vector
 	ld	hl,1$
@@ -301,11 +289,50 @@ test4:	ld	c,b_print
 	ld	de,s_pass
 	call	bdos
 	
-	; Done
+	; Test #5
+test5:	ld	c,b_print
+	ld	de,s_test5
+	call	bdos
+	
+	; Set bank 0,1,2 to databank
+	ld	a,(databank)
+	out	(zm_bnk0),a
+	out	(zm_bnk1),a
+	out	(zm_bnk2),a
+	
+	; Enable virtual mode
+	ld	a,0b00000001
+	out	(zm_ctrl),a
+	
+	; Punch in entry address
+	ld	de,zm_top+2
+	call	trapset
+	
+	; Place vector
+	ld	hl,1$
+	ld	b,0
+	ld	(nmi_vec),hl
+	
+	; Kick off RETN to reset trap mode
+	out	(zm_trap),a
+	nop
+	retn
+	jp	fail
+
+	; We should end up here
+1$:	ld	a,0b00000000
+	out	(zm_ctrl),a
+	
+	; Pass
+	ld	c,b_print
+	ld	de,s_pass
+	call	bdos
+	
+; Done
 exit:	ld	c,b_exit
 	call	bdos
 	
-	; Fail!
+; Fail!
 fail:	ld	a,0b00000000
 	out	(zm_ctrl),a
 	ld	c,b_print
@@ -317,7 +344,7 @@ fail:	ld	a,0b00000000
 ; A = Number to convert
 ;
 ; Returns DE = result
-; uses: DE
+; uses: AF, DE
 tohex:	ld	d,a
 	call	0$
 	ld	e,a
@@ -337,6 +364,8 @@ tohex:	ld	d,a
 	ret
 	
 ; Turns off all maskable interrupts to stop traps from occuring
+;
+; uses: AF
 intoff:	ld	a,0x07
 	out	(nb_atla),a	; AY register = 7
 	in	a,(nb_ayda)
@@ -348,14 +377,39 @@ intoff:	ld	a,0x07
 	out	(nb_atla),a	; AY register = 14
 	ld	a,0x00
 	out	(nb_ayda),a	; All interrupts disabled
+	
 	ret
 	
+; Sets the trap return address
+; DE = return address
+;
+; uses: AF, HL
+trapset:ld	hl,0
+	add	hl,sp
+	inc	hl
+	inc	hl
+	ld	a,zm_sres
+	and	h
+	or	zm_sset
+	ld	h,a
+	ld	(hl),e
+	inc	hl
+	ld	a,zm_sres
+	and	h
+	or	zm_sset
+	ld	h,a
+	ld	(hl),d
+	ret
 	
 ; Snippets
 snip0:
 
+	; Jump table
+	jr	snip0_a
+	jr	snip0_b
+
 	; Play with register B, and then trap out
-	nop
+snip0_a:nop
 	ld	b,1
 	nop
 	ld	b,2
@@ -367,10 +421,8 @@ snip0:
 	out	(nb_nctl),a
 	
 	ld	bc,0
-1$:	nop
-	nop
-	nop
-	nop
+1$:	push	hl
+	pop	hl
 	djnz	1$
 	dec	c
 	jr	nz,1$
@@ -386,8 +438,18 @@ snip0:
 	dec	c
 	jr	nz,2$
 	jr	0$
+	
+	; Overwrite the first 48KB of memory, and then trap
+snip0_b:ld	hl,0
+	ld	de,1
+	ld	bc,0x0C000-1
+	ld	(hl),0
+	ldir
+	
+	out	(zm_trap),a
+0$:	jr	0$
 
-snip0_e:
+snip0_end:
 	
 
 ; Strings
@@ -408,7 +470,7 @@ s_test0:
 	defb	'TEST 0: Check mapping basic: $'
 	
 s_test1:
-	defb	'TEST 1: Check memory overlay: $'
+	defb	'TEST 1: Check upper overlay: $'
 	
 s_test2:
 	defb	'TEST 2: Check memory banking...'
@@ -421,6 +483,9 @@ s_test3:
 	
 s_test4:
 	defb	'TEST 4: Trap engagement... $'
+	
+s_test5:
+	defb	'TEST 5: Check full overlay... $'
 	
 ; Variables
 textbank:
