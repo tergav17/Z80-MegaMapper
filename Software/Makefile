@@ -1,11 +1,7 @@
-# ZMM Test Software Build Script
+all:
+	make -C Debug
+	make -C KRISYS
 
-OUT = ./Output
-BUILD = ./Build 
-SOURCE = ./Source
-ZASM = zasm
-
-all: $(OUT)/ZMMBAS.COM $(OUT)/TPAINTEG.COM $(OUT)/IDEINTEG.COM 
-
-$(OUT)/%.COM: $(SOURCE)/%.asm
-	$(ZASM) $(SOURCE)/$*.asm -u -w -b $(OUT)/$*.COM
+clean:
+	make -C Debug clean
+	make -C KRISYS

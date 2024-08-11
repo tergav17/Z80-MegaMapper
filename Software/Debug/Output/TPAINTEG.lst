@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "TPAINTEG.asm"
-              	; date: 2024-08-08 00:54:16
+              	; date: 2024-08-11 02:19:20
               	; --------------------------------------
 
 
@@ -230,5 +230,5 @@ wrdone   = $011F =   287          TPAINTEG.asm:49
 wrloop   = $0110 =   272          TPAINTEG.asm:36
 
 
-total time: 0.0068 sec.
+total time: 0.0385 sec.
 no errors
