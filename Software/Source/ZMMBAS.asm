@@ -23,8 +23,8 @@ zm_bnk2	equ	0x32
 zm_bnk3	equ	0x33
 zm_ctrl	equ	0x34
 zm_isr	equ	0x30
-zm_a_lo	equ	0x32
-zm_a_hi	equ	0x33
+zm_a_hi	equ	0x32
+zm_a_lo	equ	0x33
 zm_trap	equ	0x37 
 zm_map	equ	0x8000
 zm_top	equ	0xC000
@@ -328,6 +328,79 @@ test5:	ld	c,b_print
 	ld	de,s_pass
 	call	bdos
 	
+	; Test #6
+tes6:	ld	c,b_print
+	ld	de,s_test6
+	call	bdos
+	
+	; Enable virtual mode
+	ld	a,0b00000001
+	out	(zm_ctrl),a
+	
+	; Remap 0xF9 of OUT to zm_trap
+	ld	a,zm_trap
+	ld	(zm_map+0xF9),a
+	
+	; Punch in entry address
+	ld	de,zm_top+4
+	call	trapset
+	
+	; Place vector
+	ld	hl,1$
+	ld	b,0
+	ld	(nmi_vec),hl
+	
+	; Kick off RETN to reset trap mode
+	out	(zm_trap),a
+	nop
+	retn
+	jp	fail
+	
+	; We should end up here
+1$:	ld	a,0b00000000
+	out	(zm_ctrl),a
+	
+	; Check address
+	in	a,(zm_a_lo)
+	ld	b,a
+	call	tohex
+	ld	(s_nfail),de
+	ld	a,0xF9
+	cp	b
+	jp	nz,fail
+	
+	in	a,(zm_a_hi)
+	ld	b,a
+	call	tohex
+	ld	(s_nfail),de
+	ld	a,0x69
+	cp	b
+	jp	nz,fail
+	
+	; Check instruction
+	in	a,(zm_isr)
+	ld	b,a
+	call	tohex
+	ld	(s_nfail),de
+	ld	a,0xBD
+	cp	b
+	jp	nz,fail
+	
+	; Reset I/O violation latch
+	out	(zm_trap),a
+	in	a,(zm_isr)
+	ld	b,a
+	call	tohex
+	ld	(s_nfail),de
+	ld	a,0x3D
+	cp	b
+	jp	nz,fail
+	
+	; Pass
+	ld	c,b_print
+	ld	de,s_pass
+	call	bdos
+	
 ; Done
 exit:	ld	c,b_exit
 	call	bdos
@@ -407,6 +480,7 @@ snip0:
 	; Jump table
 	jr	snip0_a
 	jr	snip0_b
+	jr	snip0_c
 
 	; Play with register B, and then trap out
 snip0_a:nop
@@ -449,6 +523,12 @@ snip0_b:ld	hl,0
 	out	(zm_trap),a
 0$:	jr	0$
 
+snip0_c:ld	b,0x69
+	ld	c,0xF9
+	out	(c),a
+	
+0$:	jr	0$
+
 snip0_end:
 	
 
@@ -486,6 +566,9 @@ s_test4:
 	
 s_test5:
 	defb	'TEST 5: Check full overlay... $'
+	
+s_test6:
+	defb	'TEST 6: Trap state recovery... $'
 	
 ; Variables
 textbank:
