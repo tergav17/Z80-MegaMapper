@@ -45,8 +45,8 @@ Memory map:
 - 0x33 W: Bank register #3
 - 0x34 W: Control Register
 - 0x30 R: Instruction Register
-- 0x32 R: Address Low Register
-- 0x33 R: Address High Register
+- 0x32 R: Address High Register
+- 0x33 R: Address Low Register
 - 0x37 R/W: Trap Vector
 
 Bank register bits:
