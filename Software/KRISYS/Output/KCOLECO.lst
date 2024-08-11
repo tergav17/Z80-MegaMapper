@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "KCOLECO.asm"
-              	; date: 2024-08-11 03:19:40
+              	; date: 2024-08-11 14:13:07
               	; --------------------------------------
 
 
@@ -44,11 +44,14 @@
               	
               	#target BIN
 0100:         	#code	_TEXT,0x0100	; Setup to run as a CP/M executable
-011B:         	#code	_DATA,_TEXT_end
-0164:         	#data	_BSS,_DATA_end
+01E1:         	#code	_DATA,_TEXT_end
+027D:         	#data	_BSS,_DATA_end
+              	
+              	; Make sure w don't overrun available memory
+              	#assert	_BSS_end < zmm_capture
               	
               	.area	_TEXT
-0100: C30301  		jp	start
+0100: C39901  		jp	start
               	
               	; -------------------------
               	; ******** Equates ********
@@ -65,7 +68,7 @@
 0030:         	zmm_bank_0	equ	0x30	; 16K Bank 0 (0x0000 - 0x3FFF)
 0031:         	zmm_bank_1	equ	0x31	; 16K Bank 1 (0x4000 - 0x7FFF)
 0032:         	zmm_bank_2	equ	0x32	; 16K Bank 2 (0x8000 - 0xBFFF)
-0033:         	zmm_bank3	equ	0x33	; 16K Bank 3 (0xC000 - 0xFFFF)
+0033:         	zmm_bank_3	equ	0x33	; 16K Bank 3 (0xC000 - 0xFFFF)
 0034:         	zmm_ctrl	equ	0x34	; ZMM Control Register
 0030:         	zmm_isr		equ	0x30	; ZMM Trapped Instruction Register
 0032:         	zmm_addr_hi	equ	0x32	; ZMM Trap Address High
@@ -96,36 +99,19 @@ C000:         	zmm_top		equ	0xC000
               	;
               	;********************************************************************
               	;*
-              	;*              I D E N T I T Y   K R I S Y S
-              	;*
-              	;*      The [K]lunkly [R]emapper / [I]nterpreter [SYS]tem
-              	;*
-              	;*             Written by Gavin Tersteeg, 2024
-              	;*              Copyleft, All Wrongs Reserved
-              	;*
-              	;*
-              	;*   This piece of software allows different classic Z80 systems
-              	;*   to run as "virtual machines" on top of existing hardware by
-              	;*   use of a ZMM (Z80 MEGAMAPPER). It does this by remapping RAM
-              	;*   and I/O address space ot match that of it's target system.
-              	;*   Anything that can't be emulated by simple remapping is instead
-              	;*   interpreted using I/O traps. 
-              	;*
-              	;*   This allows virtualized machines to run with an acceptable
-              	;*   degree of speed and accuracy. While the ZMM is still quite
-              	;*   limited in what sort of hardware can be efficiently virtualized,
-              	;*   anything that avoids MMIO or graphics hardware that isn't a VDP
-              	;*   generally can be made to work.
+              	;*                    Z M M   M E M O R Y
               	;* 
+              	;*    The ZMM can be configured to have different amounts
+              	;*    of memory installed. Instead of dicking around with 
+              	;*    on-board jumpers, KRISYS will simply check what banks
+              	;*    are available on startup. Memory will be dynamically
+              	;*    allocated as needed by the client process.
+              	;*
               	;********************************************************************
               	
-              	; -------------------------
-              	; ******** Equates ********
-              	; -------------------------
-              	
-              	; --------------------------------
-              	; ******** KRISYS Startup ********
-              	; --------------------------------
+              	; ----------------------------
+              	; ********  Functions ********
+              	; ----------------------------
               	
               	.area	_TEXT
               		
@@ -136,48 +122,79 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses: AF, BC, DE, HL
 0103:         	mem_map_init:
-              	
-              	; ---------------------------
-              	; ******** Variables ********
-              	; ---------------------------
-              	
-              	.area	_BSS
-              	
-              	; Allocated bank map
-              	; This 256 byte table keeps track of every single 16K bank
-              	; that exists on the ZMM. Populated on startup
-0164:         	alloc_bank_map:
-0164: 00000000		defs	256
-0168: 00...   	
-              	
-              	; --------------------------------
-              	; ******** KRISYS Startup ********
-              	; --------------------------------
-              	
-              	.area	_TEXT
+              		; Go to virtual mode
+0103: CD8301  		call	zmm_set_virtual
               		
-              		; KRISYS entry point
-0103:         	start:	
-              		; Set up stack
-0103: F3      		di
-0104: 310070  		ld	sp,zmm_capture
-0107: 211601  		ld	hl,cpm_exit
-010A: E5      		push	hl
+              		; Reset free bank counter
+0106: 3E00    		ld	a,0
+0108: 327D02  		ld	(banks_free),a
               		
-              		; Print "hello" splash
-010B: 0E09    		ld	c,bdos_print
-010D: 111B01  		ld	de,str_splash
-0110: CD0500  		call	bdos
+              		; Write tags to all banks
+010B: 0600    		ld	b,0
+010D: 78      	0$:	ld	a,b
+010E: D333    		out	(zmm_bank_3),a
+0110: 3200C0  		ld	(zmm_top),a
+0113: ED44    		neg
+0115: 3201C0  		ld	(zmm_top+1),a
+0118: 04      		inc	b
+0119: F20D01  		jp	p,0$
               		
-0113: C31601  		jp	cpm_exit
+              		; Mark any banks that record correctly
+011C: 0600    		ld	b,0
+011E: 217E02  		ld	hl,alloc_bank_map
+0121: AF      	1$:	xor	a
+0122: 77      		ld	(hl),a
+0123: 78      		ld	a,b
+0124: D333    		out	(zmm_bank_3),a
+0126: 3A00C0  		ld	a,(zmm_top)
+0129: B8      		cp	b
+012A: C24201  		jp	nz,2$
+012D: 3A01C0  		ld	a,(zmm_top+1)
+0130: 4F      		ld	c,a
+0131: 78      		ld	a,b
+0132: ED44    		neg
+0134: B9      		cp	c
+0135: C24201  		jp	nz,2$
+              	
+              		; Mark it
+0138: 3EFF    		ld	a,0xFF
+013A: 77      		ld	(hl),a
+013B: 3A7D02  		ld	a,(banks_free)
+013E: 3C      		inc	a
+013F: 327D02  		ld	(banks_free),a
               		
-              	; Go back to CP/M
+              		; Next
+0142: 23      	2$:	inc	hl
+0143: 04      		inc	b
+0144: F22101  		jp	p,1$
+              		
+              		; Disable virtual mode
+0147: CD8E01  		call	zmm_set_real
+              		
+              		; Print out result
+014A: 3A7D02  		ld	a,(banks_free)
+014D: CDCA01  		call	tohex
+0150: ED530602		ld	(str_mem_init_cnt),de
+0154: 11E101  		ld	de,str_mem_init
+0157: CDB201  		call	cpm_print
+              		
+              		; Do we actually have an acceptable amount of memory?
+015A: 3A7D02  		ld	a,(banks_free)
+015D: 3D      		dec	a
+015E: 3D      		dec	a
+015F: FA6301  		jp	m,mem_empty
+              		
+              		; We do, return
+0162: C9      		ret
+              		
+              	; Error out if empty
               	;
               	; Does not return
               	; Uses: N/A
-0116:         	cpm_exit:
-0116: 0E00    		ld	c,bdos_exit
-0118: CD0500  		call	bdos	
+0163:         	mem_empty:
+0163: 110C02  		ld	de,str_mem_empty
+0166: CDB201  		call	cpm_print
+0169: C3C501  		jp	cpm_exit
               	
               	; -------------------------
               	; ******** Strings ********
@@ -186,80 +203,316 @@ C000:         	zmm_top		equ	0xC000
               	.area	_DATA
               	
               	; Inital string that prints when the program is started
-011B:         	str_splash:
-011B: 4944454E		defb	'IDENTITY KRISYS HYPERVISOR, CP/M EDT.',0x0A,0x0D
-011F: 54495459	
-0123: 204B5249	
-0127: 53595320	
-012B: 48595045	
-012F: 52564953	
-0133: 4F522C20	
-0137: 43502F4D	
-013B: 20454454	
-013F: 2E0A0D  	
-0142: 5645522E		defb	'VER. 0.0.1, GAVIN TERSTEEG 2024'
-0146: 20302E30	
-014A: 2E312C20	
-014E: 47415649	
-0152: 4E205445	
-0156: 52535445	
-015A: 45472032	
-015E: 303234  	
+01E1:         	str_mem_init:
+01E1: 494E4954		defb	'INITIALIZED MEMORY MAP',0x0A,0x0D
+01E5: 49414C49	
+01E9: 5A454420	
+01ED: 4D454D4F	
+01F1: 5259204D	
+01F5: 41500A0D	
+01F9: 42414E4B		defb	'BANK COUNT = '
+01FD: 20434F55	
+0201: 4E54203D	
+0205: 20      	
+0206:         	str_mem_init_cnt:
+0206: 5858480A		defb	'XXH',0x0A,0x0D,'$'
+020A: 0D24    	
+              		
+020C:         	str_mem_empty:
+020C: 494E5355		defb	'INSUFFICIENT MEMORY',0x0A,0x0D,'$'
+0210: 46464943	
+0214: 49454E54	
+0218: 204D454D	
+021C: 4F52590A	
+0220: 0D24    	
+              	
+              	; ---------------------------
+              	; ******** Variables ********
+              	; ---------------------------
+              	
+              	.area	_BSS
+              	
+              	; Free bank count
+027D:         	banks_free:
+027D: 00      		defs	1
+              	
+              	; Allocated bank map
+              	; This 128 byte table keeps track of every single 16K bank
+              	; that exists on the ZMM. Populated on startup
+027E:         	alloc_bank_map:
+027E: 00000000		defs	128
+0282: 00...   	
+              	#include "ZMM.asm"
+              	;
+              	;********************************************************************
+              	;*
+              	;*                  Z M M   M A N A G E M E N T
+              	;* 
+              	;*    These routines are used to manage the state of the ZMM.
+              	;*    This includes the setting of the registers as well as setting
+              	;*    up trap and interrupt stuff.
+              	;*
+              	;********************************************************************
+              	
+              	; ----------------------------
+              	; ********  Functions ********
+              	; ----------------------------
+              	
+              	.area	_TEXT
+              	
+              	; Initalize ZMM and reset registers
+              	;
+              	; Returns nothing
+              	; Uses: AF
+016C:         	zmm_init:
+              		; Zero out control register
+016C: 3E00    		ld	a,0
+016E: 32FE02  		ld	(zmm_ctrl_state),a
+              		
+              		; See if we can swing in and out of virtual mode
+0171: CD8301  		call	zmm_set_virtual
+0174: CD8E01  		call	zmm_set_real
+              		
+              		; Tell the user that the ZMM is read
+0177: 112202  		ld	de,str_zmm_init
+017A: C3B201  		jp	cpm_print
+              		
+              	; Set the ZMM control register to the recorded state
+              	; (zmm_ctrl_state) = New value of ZMM control register
+              	;
+              	; Returns nothing
+              	; Uses: AF
+017D:         	zmm_ctrl_set:
+017D: 3AFE02  		ld	a,(zmm_ctrl_state)
+0180: D334    		out	(zmm_ctrl),a
+0182: C9      		ret
+              		
+              	; Go to virtual mode
+              	;
+              	; Returns nothing
+              	; Uses: AF
+0183:         	zmm_set_virtual:
+0183: 3AFE02  		ld	a,(zmm_ctrl_state)
+0186: F601    		or	0b00000001
+0188: 32FE02  		ld	(zmm_ctrl_state),a
+018B: C37D01  		jp	zmm_ctrl_set
+              		
+              	; Go to real mode
+              	;
+              	; Returns nothing
+              	; Uses: AF
+018E:         	zmm_set_real:
+018E: 3AFE02  		ld	a,(zmm_ctrl_state)
+0191: E6FE    		and	0b11111110
+0193: 32FE02  		ld	(zmm_ctrl_state),a
+0196: C37D01  		jp	zmm_ctrl_set
+              	
+              		
+              	; -------------------------
+              	; ******** Strings ********
+              	; -------------------------
+              	
+              	.area	_DATA
+              	
+              	; Inital string that prints when the program is started
+0222:         	str_zmm_init:
+0222: 494E4954		defb	'INITIALIZED ZMM',0x0A,0x0D,'$'
+0226: 49414C49	
+022A: 5A454420	
+022E: 5A4D4D0A	
+0232: 0D24    	
+              		
+              	; ---------------------------
+              	; ******** Variables ********
+              	; ---------------------------
+              	
+              	.area	_BSS
+              	
+              	; Reflected state of control register
+02FE:         	zmm_ctrl_state:
+02FE: 00      		defs	1
+              		
+              	
+              	; --------------------------------
+              	; ******** KRISYS Startup ********
+              	; --------------------------------
+              	
+              	.area	_TEXT
+              		
+              		; KRISYS entry point
+0199:         	start:	
+              		; Set up stack
+0199: F3      		di
+019A: 310070  		ld	sp,zmm_capture
+019D: 21C501  		ld	hl,cpm_exit
+01A0: E5      		push	hl
+              		
+              		; Print "hello" splash
+01A1: 0E09    		ld	c,bdos_print
+01A3: 113402  		ld	de,str_splash
+01A6: CD0500  		call	bdos
+              		
+              		; Initalize subcomponents
+01A9: CD6C01  		call	zmm_init
+01AC: CD0301  		call	mem_map_init
+              		
+01AF: C3C501  		jp	cpm_exit
+              		
+              	; ------------------------------
+              	; ******** CP/M Service ********
+              	; ------------------------------
+              		
+              	; Print something to the CP/M console
+              	; DE = Address of string to print
+              	;
+              	; Returns nothing
+              	; Uses: All
+01B2:         	cpm_print:
+              		; Save control register state
+01B2: 3AFE02  		ld	a,(zmm_ctrl_state)
+01B5: F5      		push	af
+              		
+              		; Go to real mode
+01B6: CD8E01  		call zmm_set_real
+              		
+              		; Do BDOS call
+01B9: 0E09    		ld	c,bdos_print
+01BB: CD0500  		call	bdos
+              		
+              		; Restore register
+01BE: F1      		pop	af
+01BF: 32FE02  		ld	(zmm_ctrl_state),a
+01C2: C37D01  		jp	zmm_ctrl_set
+              		
+              	; Go back to CP/M
+              	;
+              	; Does not return
+              	; Uses: N/A
+01C5:         	cpm_exit:
+01C5: 0E00    		ld	c,bdos_exit
+01C7: CD0500  		call	bdos	
+              		
+              	; ----------------------
+              	; ******** Misc ********
+              	; ----------------------
+              		
+              	; Converts the value into an 8 bit hex number
+              	; A = Number to convert
+              	;
+              	; Returns DE = result
+              	; Uses: AF, DE
+01CA: 57      	tohex:	ld	d,a
+01CB: CDD501  		call	0$
+01CE: 5F      		ld	e,a
+01CF: 7A      		ld	a,d
+01D0: CDD901  		call	1$
+01D3: 57      		ld	d,a
+01D4: C9      		ret
+              		
+01D5: 1F      	0$:	rra
+01D6: 1F      		rra
+01D7: 1F      		rra
+01D8: 1F      		rra
+01D9: F6F0    	1$:	or	0xF0
+01DB: 27      		daa
+01DC: C6A0    		add	a,0xA0
+01DE: CE40    		adc	a,0x40
+01E0: C9      		ret
+              	
+              	; -------------------------
+              	; ******** Strings ********
+              	; -------------------------
+              	
+              	.area	_DATA
+              	
+              	; Inital string that prints when the program is started
+0234:         	str_splash:
+0234: 4944454E		defb	'IDENTITY KRISYS HYPERVISOR, CP/M EDT.',0x0A,0x0D
+0238: 54495459	
+023C: 204B5249	
+0240: 53595320	
+0244: 48595045	
+0248: 52564953	
+024C: 4F522C20	
+0250: 43502F4D	
+0254: 20454454	
+0258: 2E0A0D  	
+025B: 5645522E		defb	'VER. 0.0.1, GAVIN TERSTEEG 2024'
+025F: 20302E30	
+0263: 2E312C20	
+0267: 47415649	
+026B: 4E205445	
+026F: 52535445	
+0273: 45472032	
+0277: 303234  	
               		
               	; Carriage return, line break
-0161:         	str_crlf:
-0161: 0A0D24  		defb	0x0A,0x0D,'$' 
+027A:         	str_crlf:
+027A: 0A0D24  		defb	0x0A,0x0D,'$' 
               		
 
 
 ; +++ segments +++
 
-#CODE _TEXT    = $0100 =   256,  size = $001B =    27
-#CODE _DATA    = $011B =   283,  size = $0049 =    73
-#DATA _BSS     = $0164 =   356,  size = $0100 =   256
+#CODE _TEXT    = $0100 =   256,  size = $00E1 =   225
+#CODE _DATA    = $01E1 =   481,  size = $009C =   156
+#DATA _BSS     = $027D =   637,  size = $0082 =   130
 
 ; +++ global symbols +++
 
-_BSS            = $0164 =   356  _BSS    KRISYS.asm:26 (unused)
-_BSS_end        = $0264 =   612  _BSS    KRISYS.asm:26 (unused)
-_BSS_size       = $0100 =   256  _BSS    KRISYS.asm:26 (unused)
-_DATA           = $011B =   283  _DATA   KRISYS.asm:25 (unused)
-_DATA_end       = $0164 =   356  _DATA   KRISYS.asm:25
-_DATA_size      = $0049 =    73  _DATA   KRISYS.asm:25 (unused)
-_TEXT           = $0100 =   256  _TEXT   KRISYS.asm:24 (unused)
-_TEXT_end       = $011B =   283  _TEXT   KRISYS.asm:24
-_TEXT_size      = $001B =    27  _TEXT   KRISYS.asm:24 (unused)
-alloc_bank_map  = $0164 =   356  _BSS    MEMORY.asm:54 (unused)
-bdos            = $0005 =     5  _TEXT   KRISYS.asm:44
-bdos_con_in     = $0001 =     1  _TEXT   KRISYS.asm:46 (unused)
-bdos_con_out    = $0002 =     2  _TEXT   KRISYS.asm:47 (unused)
-bdos_exit       = $0000 =     0  _TEXT   KRISYS.asm:45
-bdos_print      = $0009 =     9  _TEXT   KRISYS.asm:48
-cpm_exit        = $0116 =   278  _TEXT   KRISYS.asm:108
-mem_map_init    = $0103 =   259  _TEXT   MEMORY.asm:43 (unused)
-nabu_at_latch   = $0041 =    65  _TEXT   KRISYS.asm:75 (unused)
-nabu_ay_data    = $0040 =    64  _TEXT   KRISYS.asm:74 (unused)
-nabu_nctl       = $0000 =     0  _TEXT   KRISYS.asm:73 (unused)
-nmi_address     = $0066 =   102  _TEXT   KRISYS.asm:69
-nmi_vector      = $0067 =   103  _TEXT   KRISYS.asm:70 (unused)
-start           = $0103 =   259  _TEXT   KRISYS.asm:90
-str_crlf        = $0161 =   353  _DATA   KRISYS.asm:124 (unused)
-str_splash      = $011B =   283  _DATA   KRISYS.asm:119
-zmm_addr_hi     = $0032 =    50  _TEXT   KRISYS.asm:57 (unused)
-zmm_addr_lo     = $0033 =    51  _TEXT   KRISYS.asm:58 (unused)
-zmm_bank3       = $0033 =    51  _TEXT   KRISYS.asm:54 (unused)
-zmm_bank_0      = $0030 =    48  _TEXT   KRISYS.asm:51 (unused)
-zmm_bank_1      = $0031 =    49  _TEXT   KRISYS.asm:52 (unused)
-zmm_bank_2      = $0032 =    50  _TEXT   KRISYS.asm:53 (unused)
-zmm_capture     = $7000 = 28672  _TEXT   KRISYS.asm:61
-zmm_capture_res = $007F =   127  _TEXT   KRISYS.asm:66 (unused)
-zmm_capture_set = $0070 =   112  _TEXT   KRISYS.asm:65 (unused)
-zmm_ctrl        = $0034 =    52  _TEXT   KRISYS.asm:55 (unused)
-zmm_isr         = $0030 =    48  _TEXT   KRISYS.asm:56 (unused)
-zmm_map         = $8000 = 32768  _TEXT   KRISYS.asm:62 (unused)
-zmm_top         = $C000 = 49152  _TEXT   KRISYS.asm:63 (unused)
-zmm_trap        = $0037 =    55  _TEXT   KRISYS.asm:59 (unused)
+_BSS             = $027D =   637  _BSS    KRISYS.asm:26 (unused)
+_BSS_end         = $02FF =   767  _BSS    KRISYS.asm:26
+_BSS_size        = $0082 =   130  _BSS    KRISYS.asm:26 (unused)
+_DATA            = $01E1 =   481  _DATA   KRISYS.asm:25 (unused)
+_DATA_end        = $027D =   637  _DATA   KRISYS.asm:25
+_DATA_size       = $009C =   156  _DATA   KRISYS.asm:25 (unused)
+_TEXT            = $0100 =   256  _TEXT   KRISYS.asm:24 (unused)
+_TEXT_end        = $01E1 =   481  _TEXT   KRISYS.asm:24
+_TEXT_size       = $00E1 =   225  _TEXT   KRISYS.asm:24 (unused)
+alloc_bank_map   = $027E =   638  _BSS    MEMORY.asm:130
+banks_free       = $027D =   637  _BSS    MEMORY.asm:124
+bdos             = $0005 =     5  _TEXT   KRISYS.asm:47
+bdos_con_in      = $0001 =     1  _TEXT   KRISYS.asm:49 (unused)
+bdos_con_out     = $0002 =     2  _TEXT   KRISYS.asm:50 (unused)
+bdos_exit        = $0000 =     0  _TEXT   KRISYS.asm:48
+bdos_print       = $0009 =     9  _TEXT   KRISYS.asm:51
+cpm_exit         = $01C5 =   453  _TEXT   KRISYS.asm:142
+cpm_print        = $01B2 =   434  _TEXT   KRISYS.asm:121
+mem_empty        = $0163 =   355  _TEXT   MEMORY.asm:96
+mem_map_init     = $0103 =   259  _TEXT   MEMORY.asm:26
+nabu_at_latch    = $0041 =    65  _TEXT   KRISYS.asm:78 (unused)
+nabu_ay_data     = $0040 =    64  _TEXT   KRISYS.asm:77 (unused)
+nabu_nctl        = $0000 =     0  _TEXT   KRISYS.asm:76 (unused)
+nmi_address      = $0066 =   102  _TEXT   KRISYS.asm:72
+nmi_vector       = $0067 =   103  _TEXT   KRISYS.asm:73 (unused)
+start            = $0199 =   409  _TEXT   KRISYS.asm:94
+str_crlf         = $027A =   634  _DATA   KRISYS.asm:185 (unused)
+str_mem_empty    = $020C =   524  _DATA   MEMORY.asm:114
+str_mem_init     = $01E1 =   481  _DATA   MEMORY.asm:108
+str_mem_init_cnt = $0206 =   518  _DATA   MEMORY.asm:111
+str_splash       = $0234 =   564  _DATA   KRISYS.asm:180
+str_zmm_init     = $0222 =   546  _DATA   ZMM.asm:73
+tohex            = $01CA =   458  _TEXT   KRISYS.asm:155
+zmm_addr_hi      = $0032 =    50  _TEXT   KRISYS.asm:60 (unused)
+zmm_addr_lo      = $0033 =    51  _TEXT   KRISYS.asm:61 (unused)
+zmm_bank_0       = $0030 =    48  _TEXT   KRISYS.asm:54 (unused)
+zmm_bank_1       = $0031 =    49  _TEXT   KRISYS.asm:55 (unused)
+zmm_bank_2       = $0032 =    50  _TEXT   KRISYS.asm:56 (unused)
+zmm_bank_3       = $0033 =    51  _TEXT   KRISYS.asm:57
+zmm_capture      = $7000 = 28672  _TEXT   KRISYS.asm:64
+zmm_capture_res  = $007F =   127  _TEXT   KRISYS.asm:69 (unused)
+zmm_capture_set  = $0070 =   112  _TEXT   KRISYS.asm:68 (unused)
+zmm_ctrl         = $0034 =    52  _TEXT   KRISYS.asm:58
+zmm_ctrl_set     = $017D =   381  _TEXT   ZMM.asm:40
+zmm_ctrl_state   = $02FE =   766  _BSS    ZMM.asm:83
+zmm_init         = $016C =   364  _TEXT   ZMM.asm:22
+zmm_isr          = $0030 =    48  _TEXT   KRISYS.asm:59 (unused)
+zmm_map          = $8000 = 32768  _TEXT   KRISYS.asm:65 (unused)
+zmm_set_real     = $018E =   398  _TEXT   ZMM.asm:59
+zmm_set_virtual  = $0183 =   387  _TEXT   ZMM.asm:49
+zmm_top          = $C000 = 49152  _TEXT   KRISYS.asm:66
+zmm_trap         = $0037 =    55  _TEXT   KRISYS.asm:62 (unused)
 
 
-total time: 0.0741 sec.
+total time: 0.1504 sec.
 no errors

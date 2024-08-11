@@ -33,6 +33,9 @@
 #code	_DATA,_TEXT_end
 #data	_BSS,_DATA_end
 
+; Make sure w don't overrun available memory
+#assert	_BSS_end < zmm_capture
+
 .area	_TEXT
 	jp	start
 
@@ -51,7 +54,7 @@ bdos_print	equ	0x09
 zmm_bank_0	equ	0x30	; 16K Bank 0 (0x0000 - 0x3FFF)
 zmm_bank_1	equ	0x31	; 16K Bank 1 (0x4000 - 0x7FFF)
 zmm_bank_2	equ	0x32	; 16K Bank 2 (0x8000 - 0xBFFF)
-zmm_bank3	equ	0x33	; 16K Bank 3 (0xC000 - 0xFFFF)
+zmm_bank_3	equ	0x33	; 16K Bank 3 (0xC000 - 0xFFFF)
 zmm_ctrl	equ	0x34	; ZMM Control Register
 zmm_isr		equ	0x30	; ZMM Trapped Instruction Register
 zmm_addr_hi	equ	0x32	; ZMM Trap Address High
@@ -79,6 +82,7 @@ nabu_at_latch	equ	0x41	; AY-3-8910 Latch Port
 ; -------------------------------------
 
 #include "MEMORY.asm"
+#include "ZMM.asm"
 
 ; --------------------------------
 ; ******** KRISYS Startup ********
@@ -99,7 +103,37 @@ start:
 	ld	de,str_splash
 	call	bdos
 	
+	; Initalize subcomponents
+	call	zmm_init
+	call	mem_map_init
+	
 	jp	cpm_exit
+	
+; ------------------------------
+; ******** CP/M Service ********
+; ------------------------------
+	
+; Print something to the CP/M console
+; DE = Address of string to print
+;
+; Returns nothing
+; Uses: All
+cpm_print:
+	; Save control register state
+	ld	a,(zmm_ctrl_state)
+	push	af
+	
+	; Go to real mode
+	call zmm_set_real
+	
+	; Do BDOS call
+	ld	c,bdos_print
+	call	bdos
+	
+	; Restore register
+	pop	af
+	ld	(zmm_ctrl_state),a
+	jp	zmm_ctrl_set
 	
 ; Go back to CP/M
 ;
@@ -108,6 +142,33 @@ start:
 cpm_exit:
 	ld	c,bdos_exit
 	call	bdos	
+	
+; ----------------------
+; ******** Misc ********
+; ----------------------
+	
+; Converts the value into an 8 bit hex number
+; A = Number to convert
+;
+; Returns DE = result
+; Uses: AF, DE
+tohex:	ld	d,a
+	call	0$
+	ld	e,a
+	ld	a,d
+	call	1$
+	ld	d,a
+	ret
+	
+0$:	rra
+	rra
+	rra
+	rra
+1$:	or	0xF0
+	daa
+	add	a,0xA0
+	adc	a,0x40
+	ret
 
 ; -------------------------
 ; ******** Strings ********
