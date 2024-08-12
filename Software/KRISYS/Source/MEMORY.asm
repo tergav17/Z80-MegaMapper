@@ -9,6 +9,10 @@
 ;*    are available on startup. Memory will be dynamically
 ;*    allocated as needed by the client process.
 ;*
+;*    Memory can be assigned to specific owners in the code.
+;*    Valid owner IDs range from 1 to 254. Owner 0 is reserved
+;*    for unallocatable banks.
+;*
 ;********************************************************************
 
 ; ----------------------------
@@ -87,6 +91,83 @@ mem_map_init:
 	jp	m,mem_empty
 	
 	; We do, return
+	ret
+	
+; Allocates a bank of memory
+; Will produce an error if no banks are available,
+; check (banks_free) to avoid
+; D = Owner ID (1-254)
+;
+; Returns A = Bank #
+; Uses: AF, BC, HL
+mem_alloc:
+	; Check and decrement free memory
+	ld	a,(banks_free)
+	dec	a
+	ld	(banks_free),a
+	jp	m,mem_empty
+	
+	; Look for the first free bank
+	ld	hl,alloc_bank_map
+	ld	bc,0x0080
+	ld	a,0xFF
+	cpir
+	
+	; Make sure we found something
+	jp	nz,mem_empty
+	
+	; Save and exit
+	dec	hl
+	ld	(hl),d
+	ld	bc,alloc_bank_map
+	or	a
+	sbc	hl,bc
+	ld	l,a
+	ret
+	
+; Frees a bank of memory
+; Safe to use on banks that are not free / not owned
+; A = Bank #
+; D = Owner ID (1-254)
+;
+; Returns nothing
+; Uses: AF, BC, HL
+mem_free:
+	; Find location in memory
+	ld	b,0
+	ld	c,a
+	ld	hl,alloc_bank_map
+	add	hl,bc
+	
+	; Check owner
+	ld	a,(hl)
+	cp	d
+	ret	nz
+	
+	; Free bank
+	ld	a,0xFF
+	ld	(hl),a
+	
+	; Increment banks free
+	ld	hl,banks_free
+	inc	(hl)
+	ret
+	
+; Free all banks by owner
+; D = Owner ID (1-254)
+;
+; Returns nothing
+; Uses: AF, BC, HL
+mem_free_all:
+	; Free a bank
+	xor	a
+0$:	push	af
+	call	mem_free
+	pop	af
+	
+	; Next bank
+	inc	a
+	jp	p,0$
 	ret
 	
 ; Error out if empty

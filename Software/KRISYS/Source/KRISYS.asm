@@ -28,13 +28,15 @@
 ; ******** ZASM Setup ********
 ; ----------------------------
 
+stack_size = 0x32
+
 #target BIN
 #code	_TEXT,0x0100	; Setup to run as a CP/M executable
 #code	_DATA,_TEXT_end
 #data	_BSS,_DATA_end
 
 ; Make sure w don't overrun available memory
-#assert	_BSS_end < zmm_capture
+#assert	_BSS_end < (zmm_capture-stack_size)
 
 .area	_TEXT
 	jp	start

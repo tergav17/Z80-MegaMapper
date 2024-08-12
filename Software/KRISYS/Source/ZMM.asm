@@ -23,6 +23,10 @@ zmm_init:
 	; Zero out control register
 	ld	a,0
 	ld	(zmm_ctrl_state),a
+	ld	(zmm_bank_0_state),a
+	ld	(zmm_bank_1_state),a
+	ld	(zmm_bank_2_state),a
+	ld	(zmm_bank_3_state),a
 	
 	; See if we can swing in and out of virtual mode
 	call	zmm_set_virtual
@@ -81,5 +85,21 @@ str_zmm_init:
 
 ; Reflected state of control register
 zmm_ctrl_state:
+	defs	1
+	
+; Bank 0 state
+zmm_bank_0_state:
+	defs	1
+	
+; Bank 1 state
+zmm_bank_1_state:
+	defs	1
+	
+; Bank 2 state
+zmm_bank_2_state:
+	defs	1
+	
+; Bank 3 state
+zmm_bank_3_state:
 	defs	1
 	
