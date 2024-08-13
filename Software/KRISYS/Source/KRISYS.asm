@@ -28,7 +28,7 @@
 ; ******** ZASM Setup ********
 ; ----------------------------
 
-stack_size = 0x32
+stack_size = 0x20
 
 #target BIN
 #code	_TEXT,0x0100	; Setup to run as a CP/M executable
@@ -39,7 +39,7 @@ stack_size = 0x32
 #assert	_BSS_end < (zmm_capture-stack_size)
 
 .area	_TEXT
-	jp	start
+	jp	kri_start
 
 ; -------------------------
 ; ******** Equates ********
@@ -52,11 +52,13 @@ bdos_con_in	equ	0x01
 bdos_con_out	equ	0x02
 bdos_print	equ	0x09
 
+cpm_command	equ	0x0080
+
 ; Z80 MEGAMAPPER Stuff
-zmm_bank_0	equ	0x30	; 16K Bank 0 (0x0000 - 0x3FFF)
-zmm_bank_1	equ	0x31	; 16K Bank 1 (0x4000 - 0x7FFF)
-zmm_bank_2	equ	0x32	; 16K Bank 2 (0x8000 - 0xBFFF)
-zmm_bank_3	equ	0x33	; 16K Bank 3 (0xC000 - 0xFFFF)
+zmm_bnk0	equ	0x30	; 16K Bank 0 (0x0000 - 0x3FFF)
+zmm_bnk1	equ	0x31	; 16K Bank 1 (0x4000 - 0x7FFF)
+zmm_bnk2	equ	0x32	; 16K Bank 2 (0x8000 - 0xBFFF)
+zmm_bnk3	equ	0x33	; 16K Bank 3 (0xC000 - 0xFFFF)
 zmm_ctrl	equ	0x34	; ZMM Control Register
 zmm_isr		equ	0x30	; ZMM Trapped Instruction Register
 zmm_addr_hi	equ	0x32	; ZMM Trap Address High
@@ -67,8 +69,8 @@ zmm_capture	equ	0x7000
 zmm_map		equ	0x8000
 zmm_top		equ	0xC000
 
-zmm_capture_set	equ	0b01110000
-zmm_capture_res	equ	0b01111111
+zmm_capt_set	equ	0b01110000
+zmm_capt_res	equ	0b01111111
 
 ; General Z80 Stuff
 nmi_address	equ	0x0066
@@ -93,7 +95,7 @@ nabu_at_latch	equ	0x41	; AY-3-8910 Latch Port
 .area	_TEXT
 	
 	; KRISYS entry point
-start:	
+kri_start:	
 	; Set up stack
 	di
 	ld	sp,zmm_capture

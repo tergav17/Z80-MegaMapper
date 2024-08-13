@@ -29,7 +29,7 @@
 ; Uses: AF, BC, DE, HL
 mem_map_init:
 	; Go to virtual mode
-	call	zmm_set_virtual
+	call	zmm_set_virt
 	
 	; Reset free bank counter
 	ld	a,0
@@ -38,7 +38,7 @@ mem_map_init:
 	; Write tags to all banks
 	ld	b,0
 0$:	ld	a,b
-	out	(zmm_bank_3),a
+	call	zmm_bnk3_set
 	ld	(zmm_top),a
 	neg
 	ld	(zmm_top+1),a
@@ -51,7 +51,7 @@ mem_map_init:
 1$:	xor	a
 	ld	(hl),a
 	ld	a,b
-	out	(zmm_bank_3),a
+	call	zmm_bnk3_set
 	ld	a,(zmm_top)
 	cp	b
 	jp	nz,2$
