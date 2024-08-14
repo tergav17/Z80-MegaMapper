@@ -36,6 +36,73 @@ res_init:
 	ld	(hl),b
 	
 	ret
+	
+; Opens a file based on the resource argument
+; If the file cannot be opened, an error will be thrown
+; (res_argument) = File to open
+;
+; Returns nothing
+res_open:
+
+	; TODO: remove
+	jp	0$
+
+	; Virtual mode should be off while we do this
+	ld	a,(zmm_ctrl_state)
+	push	af
+	call	zmm_set_real
+	
+	; Do function call
+	call	0$
+	
+	; Restore register
+	pop	af
+	ld	(zmm_ctrl_state),a
+	jp	zmm_ctrl_set
+	
+	; Let the user know we are loading stuff
+0$:	ld	c,bdos_print
+	ld	de,str_load_a
+	call	bdos
+	
+	; Print resource name
+	ld	hl,res_current
+	ld	e,(hl)
+	inc	hl
+	ld	d,(hl)
+	call	res_printzt
+	
+	; Next string
+	ld	c,bdos_print
+	ld	de,str_load_b
+	call	bdos
+	
+	; Print file name
+	ld	de,res_argument
+	call	res_printzt
+	
+	ret
+	
+	
+; Print a zero terminated string
+; We should be in real mode for this
+; DE = String
+;
+; Returns nothing
+; Uses: All
+res_printzt:
+0$:	ld	a,(de)
+	or	a
+	ret	z
+	
+	; Print character
+	push	de
+	ld	e,a
+	ld	c,bdos_con_out
+	call	bdos
+	pop	de
+	inc	de
+	jp	0$
 
 ; Find a resource from the command line
 ; If the resource is found, the contents will be cached in memory
@@ -44,6 +111,9 @@ res_init:
 ; Returns A = 0xFF if no resource is found
 ; Uses: AF, BC, DE, HL
 res_locate:
+	; Save resource
+	ld	(res_current),de
+
 	; Travel to the start of arguments
 	ld	hl,cpm_command+1
 0$:	ld	a,(hl)
@@ -119,8 +189,7 @@ res_locate:
 	djnz	7$
 
 	; Zero terminate
-8$:	inc	de
-	xor	a
+8$:	xor	a
 	ld	(de),a
 	
 	; Good ending
@@ -131,6 +200,26 @@ res_locate:
 99$:	ld	a,0xFF
 	ret
 	
+; -------------------------
+; ******** Strings ********
+; -------------------------
+
+.area	_DATA
+
+; Loading string components
+str_load_a:
+	defb	'LOADING $'
+	
+str_load_b:
+	defb	' FROM $'
+	
+; Error messages
+str_arg_empty:
+	defb	'NO ARGUMENT PROVIDED',0x0A,0x0D,'$'
+	
+str_arg_fail:
+	defb	'FAILED TO OPEN FILE',0x0A,0x0D,'$'
+	
 ; ---------------------------
 ; ******** Variables ********
 ; ---------------------------
@@ -140,3 +229,23 @@ res_locate:
 ; Stores a zero-terminated string for the resource argument
 res_argument:
 	defs	arg_size+1
+	
+; Current resource being accessed
+res_current:
+	defs	arg_size+1
+	
+; File control block for use in loading resources
+res_fcb:
+	defs	36
+res_fcb_drive	equ	res_fcb
+res_fcb_name	equ	res_fcb+1
+res_fcb_type	equ	res_fcb+9
+res_fcb_ex	equ	res_fcb+12
+res_fcb_s1	equ	res_fcb+13
+res_fcb_s2	equ	res_fcb+14
+res_fcb_rc	equ	res_fcb+15
+res_fcb_data	equ	res_fcb+16
+res_fcb_cr	equ	res_fcb+32
+res_fcb_r0	equ	res_fcb+33
+res_fcb_r1	equ	res_fcb+34
+res_fcb_r2	equ	res_fcb+35
