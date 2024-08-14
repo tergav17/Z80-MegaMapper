@@ -1,5 +1,5 @@
               	; --------------------------------------
-              	; zasm: assemble "KCOLECO.asm"
+              	; zasm: assemble "KSG1000.asm"
               	; date: 2024-08-13 23:33:54
               	; --------------------------------------
 
@@ -7,7 +7,7 @@
               	;
               	;********************************************************************
               	;*
-              	;*        K R I S Y S   C O L E C O V I S I O N   C O R E
+              	;*        K R I S Y S   S G 1 0 0 0   C O R E
               	;*
               	;********************************************************************
               	
@@ -816,7 +816,7 @@ C000:         	zmm_top		equ	0xC000
               	
               	.area	_TEXT
               	
-              	; Start of ColecoVision core
+              	; Start of SG-1000 core
 02F4:         	core_start:
 02F4: C3D802  		jp	cpm_exit
 
@@ -846,7 +846,7 @@ bdos_con_in      = $0001 =     1  _TEXT   KRISYS.asm:51 (unused)
 bdos_con_out     = $0002 =     2  _TEXT   KRISYS.asm:52 (unused)
 bdos_exit        = $0000 =     0  _TEXT   KRISYS.asm:50
 bdos_print       = $0009 =     9  _TEXT   KRISYS.asm:53
-core_start       = $02F4 =   756  _TEXT   KCOLECO.asm:17
+core_start       = $02F4 =   756  _TEXT   KSG1000.asm:17
 cpm_command      = $0080 =   128  _TEXT   KRISYS.asm:55
 cpm_exit         = $02D8 =   728  _TEXT   KRISYS.asm:150
 cpm_print        = $02C5 =   709  _TEXT   KRISYS.asm:129
@@ -907,5 +907,5 @@ zmm_top          = $C000 = 49152  _TEXT   KRISYS.asm:70
 zmm_trap         = $0037 =    55  _TEXT   KRISYS.asm:66 (unused)
 
 
-total time: 0.2579 sec.
+total time: 0.2576 sec.
 no errors

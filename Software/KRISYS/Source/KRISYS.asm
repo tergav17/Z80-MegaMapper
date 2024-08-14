@@ -87,6 +87,7 @@ nabu_at_latch	equ	0x41	; AY-3-8910 Latch Port
 
 #include "MEMORY.asm"
 #include "ZMM.asm"
+#include "RESOURCE.asm"
 
 ; --------------------------------
 ; ******** KRISYS Startup ********
@@ -108,10 +109,13 @@ kri_start:
 	call	bdos
 	
 	; Initalize subcomponents
-	call	zmm_init
-	call	mem_map_init
+	;call	zmm_init
+	;call	mem_map_init
+	call	res_init
 	
-	jp	cpm_exit
+	
+	; Start the core
+	jp	core_start
 	
 ; ------------------------------
 ; ******** CP/M Service ********
