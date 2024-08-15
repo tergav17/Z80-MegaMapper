@@ -51,6 +51,7 @@ bdos_exit	equ	0x00
 bdos_con_in	equ	0x01
 bdos_con_out	equ	0x02
 bdos_print	equ	0x09
+bdos_open	equ	0x0F
 
 cpm_command	equ	0x0080
 

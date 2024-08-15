@@ -81,7 +81,127 @@ res_open:
 	ld	de,res_argument
 	call	res_printzt
 	
-	ret
+	; CRLF
+	ld	c,bdos_print
+	ld	de,str_crlf
+	call	bdos
+	
+	; Detect if there is an argument
+	ld	a,(res_argument)
+	or	a
+	jp	nz,1$
+	
+	; No argument, error!
+	ld	c,bdos_print
+	ld	de,str_arg_empty
+	call	bdos
+	jp	cpm_exit
+
+	; Reset fields
+1$:	xor	a
+	ld	hl,res_fcb
+	ld	de,res_fcb+1
+	ld	bc ,36-1
+	ld	(hl),a
+	ldir
+	
+	ld	a,0x20
+	ld	hl,res_fcb_name
+	ld	de,res_fcb_name+1
+	ld	bc ,11-1
+	ld	(hl),a
+	ldir
+
+	; Is there a prefix?
+	ld	hl,res_argument
+	ld	a,(res_argument+1)
+	cp	':'
+	jp	nz,2$
+	
+	; Set prefix
+	ld	a,(res_argument)
+	sub	'A'-1
+	cp	17
+	jp	nc,99$
+	ld	(res_fcb_drive),a
+	inc	hl
+	inc	hl
+
+	; HL = Proper filename start
+2$:	ld	b,8
+	ld	de,res_fcb_name
+	
+	; Copy it over
+3$:	ld	a,(hl)
+	or	a
+	jp	z,99$
+	cp	'*'
+	jp	z,4$
+	cp	'.'
+	jp	z,5$
+	ld	(de),a
+	inc	de
+	inc	hl
+	djnz	3$
+	jp	5$
+
+	; Fill remains of FCB file name
+4$:	ld	a,'?'
+	ld	(de),a
+	inc	de
+	djnz	4$
+	inc	hl
+
+	; We should either see a '.' or a EOS
+5$:	ld	a,(hl)
+	or	a
+	jp	z,8$
+	cp	'.'
+	jp	nz,99$
+	inc	hl
+	
+	; Fill in extension
+	ld	b,3
+	ld	de,res_fcb_type
+	
+	; Copy it over
+6$:	ld	a,(hl)
+	or	a
+	jp	z,8$
+	cp	'*'
+	jp	z,7$
+	ld	(de),a
+	inc	de
+	inc	hl
+	djnz	6$
+	jp	8$
+	
+	; Fill remains of FCB file extension
+7$:	ld	a,'?'
+	ld	(de),a
+	inc	de
+	djnz	4$
+	inc	hl
+
+	; We should get a zero
+8$:	ld 	a,(hl)
+	or	a
+	jp	nz,99$
+	
+	; It is filled in, attempt to open
+	ld	c,bdos_open
+	ld	de,res_fcb
+	call	bdos
+	
+	; Check error
+	or	a
+	ret	z
+	
+	; Error!
+99$:	ld	c,bdos_print
+	ld	de,str_arg_fail
+	call	bdos
+	jp	cpm_exit
 	
 	
 ; Print a zero terminated string
