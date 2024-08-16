@@ -86,7 +86,8 @@ res_load:
 	ld	c,bios_set_dma
 	call	bdos
 	
-	; Set pointer	ld	hl,zmm_top
+	; Set pointer	
+	ld	hl,zmm_top
 	ld	(res_pointer),hl
 	
 	; We will be loading up to 128 records at a time here

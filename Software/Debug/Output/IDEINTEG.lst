@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "IDEINTEG.asm"
-              	; date: 2024-08-11 02:19:20
+              	; date: 2024-08-16 00:03:10
               	; --------------------------------------
 
 
@@ -320,5 +320,5 @@ tohex   = $01EC =   492          IDEINTEG.asm:191
 tsaddr  = $0204 =   516          IDEINTEG.asm:214
 
 
-total time: 0.0502 sec.
+total time: 0.0074 sec.
 no errors
