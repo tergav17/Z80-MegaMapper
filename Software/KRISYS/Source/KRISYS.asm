@@ -52,6 +52,8 @@ bdos_con_in	equ	0x01
 bdos_con_out	equ	0x02
 bdos_print	equ	0x09
 bdos_open	equ	0x0F
+bdos_read	equ	0x14
+bios_set_dma	equ	0x1A
 
 cpm_command	equ	0x0080
 

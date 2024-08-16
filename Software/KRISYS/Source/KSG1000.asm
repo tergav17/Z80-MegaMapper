@@ -24,6 +24,11 @@ core_start:
 	
 	; Open the resource
 	call	res_open
+	
+	; Load resources into bankmap
+	ld	hl,bm_rom
+	ld	bc,256
+	call	res_load
 
 	jp	cpm_exit
 	
@@ -36,3 +41,14 @@ core_start:
 ; Resource strings
 str_rom:
 	defb	'ROM',0
+	
+	
+; ---------------------------
+; ******** Variables ********
+; ---------------------------
+
+.area	_BSS
+
+; Reflected state of control register
+bm_rom:
+	defs	2

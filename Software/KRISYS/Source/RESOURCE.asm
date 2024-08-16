@@ -37,15 +37,120 @@ res_init:
 	
 	ret
 	
+; Loads an open resource into a bankmap
+; Bankmap will be zero-padded to fill requested number of records
+; HL = Address of bankmap
+; BC = Number of records (128 byte blocks) to load
+;
+; Returns nothing
+; Uses: all
+res_load:
+
+	; Set read flag
+	ld	a,0xFF
+	ld	(res_do_read),a
+
+	; Save args
+	ld	(res_bankmap),hl
+	ld	(res_sectors),bc
+
+	; Virtual mode should be off while we do this
+	ld	a,(zmm_ctrl_state)
+	push	af
+	call	zmm_set_real
+	
+	; Do function call
+	call	0$
+	
+	; Reset bank 3
+	ld	a,(zmm_bnk3_state)
+	out	(zmm_bnk3),a
+	
+	; Restore register
+	pop	af
+	ld	(zmm_ctrl_state),a
+	jp	zmm_ctrl_set
+	
+	; Allocate a new bank
+0$:	call	mem_alloc
+	ld	hl,(res_bankmap)
+	ld	(hl),a
+	inc	hl
+	ld	(res_bankmap),hl
+	
+	; Set the bank in slot 3
+	out	(zmm_bnk3),a
+	
+	; Set DMA address
+	ld	de,res_buffer
+	ld	c,bios_set_dma
+	call	bdos
+	
+	; Set pointer	ld	hl,zmm_top
+	ld	(res_pointer),hl
+	
+	; We will be loading up to 128 records at a time here
+	ld	b,128
+	
+	; Do read operation
+1$:	push	bc
+	ld	de,res_fcb
+	ld	c,bdos_read
+	ld	a,(res_do_read)
+	or	a
+	call	nz,bdos
+	
+	; Check file I/O result
+	or	a
+	call	nz,50$
+	
+	; Go to virtual mode
+	call	zmm_set_virt
+	
+	; Copy record to bank
+	ld	hl,res_buffer
+	ld	de,(res_pointer)
+	ld	bc,128
+	ldir
+	ld	(res_pointer),de
+	
+	; Back to real mode
+	call	zmm_set_real 
+	
+	; Get BC back to restore sector counter
+	pop	bc
+	
+	; Decrement record count
+	ld	hl,(res_sectors)
+	dec	hl
+	ld	(res_sectors),hl
+	ld	a,h
+	or	l
+	ret	z
+	
+	; Go get another sector
+	djnz	1$
+	jp	0$
+
+	; Zero buffer and reset read flag
+50$:	xor	a
+	ld	(res_do_read),a
+	
+	ld	hl,res_buffer
+	ld	de,res_buffer+1
+	ld	bc,128-1
+	ld	(hl),a
+	ldir
+
+	ret
+	
 ; Opens a file based on the resource argument
 ; If the file cannot be opened, an error will be thrown
 ; (res_argument) = File to open
 ;
 ; Returns nothing
+; Uses: all
 res_open:
-
-	; TODO: remove
-	jp	0$
 
 	; Virtual mode should be off while we do this
 	ld	a,(zmm_ctrl_state)
@@ -152,7 +257,7 @@ res_open:
 	djnz	4$
 	inc	hl
 
-	; We should either see a '.' or a EOS
+	; We should either see a '.' or a null character
 5$:	ld	a,(hl)
 	or	a
 	jp	z,8$
@@ -194,8 +299,8 @@ res_open:
 	call	bdos
 	
 	; Check error
-	or	a
-	ret	z
+	inc	a
+	ret	nz
 	
 	; Error!
 99$:	ld	c,bdos_print
@@ -353,6 +458,26 @@ res_argument:
 ; Current resource being accessed
 res_current:
 	defs	arg_size+1
+	
+; Resource buffer
+res_buffer:
+	defs	128
+	
+; Sector counter
+res_sectors:
+	defs	2
+	
+; Do we need to read?
+res_do_read:
+	defs	1
+	
+; Resource bankmap
+res_bankmap:
+	defs	2
+	
+; Loading pointer
+res_pointer:
+	defs	2
 	
 ; File control block for use in loading resources
 res_fcb:

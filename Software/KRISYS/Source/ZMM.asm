@@ -138,7 +138,7 @@ zmm_irq_off:
 ; A = Bank to set
 ;
 ; Returns nothing
-; Uses: nothing
+; Uses: AF, B
 zmm_bnk0_set:
 	ld	(zmm_bnk0_state),a
 	out	(zmm_bnk0),a
@@ -148,7 +148,7 @@ zmm_bnk0_set:
 ; A = Bank to set
 ;
 ; Returns nothing
-; Uses: nothing
+; Uses:  AF, B
 zmm_bnk1_set:
 	ld	(zmm_bnk1_state),a
 	out	(zmm_bnk1),a
@@ -158,7 +158,7 @@ zmm_bnk1_set:
 ; A = Bank to set
 ;
 ; Returns nothing
-; Uses: nothing
+; Uses:  AF, B
 zmm_bnk2_set:
 	ld	(zmm_bnk2_state),a
 	out	(zmm_bnk2),a
@@ -168,7 +168,7 @@ zmm_bnk2_set:
 ; A = Bank to set
 ;
 ; Returns nothing
-; Uses: nothing
+; Uses:  AF, B
 zmm_bnk3_set:
 	ld	(zmm_bnk3_state),a
 	out	(zmm_bnk3),a
