@@ -91,6 +91,7 @@ nabu_at_latch	equ	0x41	; AY-3-8910 Latch Port
 #include "MEMORY.asm"
 #include "ZMM.asm"
 #include "RESOURCE.asm"
+#include "TRAP.asm"
 
 ; --------------------------------
 ; ******** KRISYS Startup ********
@@ -113,6 +114,7 @@ kri_start:
 	
 	; Initalize subcomponents
 	call	zmm_init
+	call	trap_init
 	call	mem_map_init
 	call	res_init
 	

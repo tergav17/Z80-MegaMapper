@@ -45,7 +45,6 @@ res_init:
 ; Returns nothing
 ; Uses: all
 res_load:
-
 	; Set read flag
 	ld	a,0xFF
 	ld	(res_do_read),a
@@ -152,7 +151,6 @@ res_load:
 ; Returns nothing
 ; Uses: all
 res_open:
-
 	; Virtual mode should be off while we do this
 	ld	a,(zmm_ctrl_state)
 	push	af

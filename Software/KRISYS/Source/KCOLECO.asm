@@ -16,3 +16,12 @@
 ; Start of ColecoVision core
 core_start:
 	jp	cpm_exit
+	
+; -----------------------------------
+; ******** Interrupt Handler ********
+; -----------------------------------
+	
+; Handle "real" interrupts from devices (if needed)
+; All registers except AF must remain unchanged!
+irq_handle:
+	ret
