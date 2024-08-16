@@ -112,8 +112,8 @@ kri_start:
 	call	bdos
 	
 	; Initalize subcomponents
-	;call	zmm_init
-	;call	mem_map_init
+	call	zmm_init
+	call	mem_map_init
 	call	res_init
 	
 	
