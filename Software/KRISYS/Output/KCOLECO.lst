@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "KCOLECO.asm"
-              	; date: 2024-08-17 23:33:38
+              	; date: 2024-08-18 14:50:53
               	; --------------------------------------
 
 
@@ -46,14 +46,14 @@
               	
               	#target BIN
 0100:         	#code	_TEXT,0x0100	; Setup to run as a CP/M executable
-04C3:         	#code	_DATA,_TEXT_end
-059C:         	#data	_BSS,_DATA_end
+0685:         	#code	_DATA,_TEXT_end
+075E:         	#data	_BSS,_DATA_end
               	
               	; Make sure w don't overrun available memory
               	#assert	_BSS_end < (zmm_capture-stack_size)
               	
               	.area	_TEXT
-0100: C36D04  		jp	kri_start
+0100: C32F06  		jp	kri_start
               	
               	; -------------------------
               	; ******** Equates ********
@@ -143,7 +143,7 @@ C000:         	zmm_top		equ	0xC000
               		
               		; Reset free bank counter
 0106: 3E00    		ld	a,0
-0108: 329C05  		ld	(banks_free),a
+0108: 325E07  		ld	(banks_free),a
               		
               		; Write tags to all banks
 010B: 0600    		ld	b,0
@@ -157,7 +157,7 @@ C000:         	zmm_top		equ	0xC000
               		
               		; Mark any banks that record correctly
 011D: 0600    		ld	b,0
-011F: 219D05  		ld	hl,alloc_bank_map
+011F: 215F07  		ld	hl,alloc_bank_map
 0122: AF      	1$:	xor	a
 0123: 77      		ld	(hl),a
 0124: 78      		ld	a,b
@@ -175,9 +175,9 @@ C000:         	zmm_top		equ	0xC000
               		; Mark it
 013A: 3EFF    		ld	a,0xFF
 013C: 77      		ld	(hl),a
-013D: 3A9C05  		ld	a,(banks_free)
+013D: 3A5E07  		ld	a,(banks_free)
 0140: 3C      		inc	a
-0141: 329C05  		ld	(banks_free),a
+0141: 325E07  		ld	(banks_free),a
               		
               		; Next
 0144: 23      	2$:	inc	hl
@@ -188,14 +188,14 @@ C000:         	zmm_top		equ	0xC000
 0149: CDDA01  		call	zmm_set_real
               		
               		; Print out result
-014C: 3A9C05  		ld	a,(banks_free)
-014F: CDA404  		call	tohex
-0152: ED53E804		ld	(str_mem_init_cnt),de
-0156: 11C304  		ld	de,str_mem_init
-0159: CD8C04  		call	cpm_print
+014C: 3A5E07  		ld	a,(banks_free)
+014F: CD6606  		call	tohex
+0152: ED53AA06		ld	(str_mem_init_cnt),de
+0156: 118506  		ld	de,str_mem_init
+0159: CD4E06  		call	cpm_print
               		
               		; Do we actually have an acceptable amount of memory?
-015C: 3A9C05  		ld	a,(banks_free)
+015C: 3A5E07  		ld	a,(banks_free)
 015F: 3D      		dec	a
 0160: 3D      		dec	a
 0161: FAA301  		jp	m,mem_empty
@@ -212,13 +212,13 @@ C000:         	zmm_top		equ	0xC000
               	; Uses: AF, BC, HL
 0165:         	mem_alloc:
               		; Check and decrement free memory
-0165: 3A9C05  		ld	a,(banks_free)
+0165: 3A5E07  		ld	a,(banks_free)
 0168: 3D      		dec	a
-0169: 329C05  		ld	(banks_free),a
+0169: 325E07  		ld	(banks_free),a
 016C: FAA301  		jp	m,mem_empty
               		
               		; Look for the first free bank
-016F: 219D05  		ld	hl,alloc_bank_map
+016F: 215F07  		ld	hl,alloc_bank_map
 0172: 018000  		ld	bc,0x0080
 0175: 3EFF    		ld	a,0xFF
 0177: EDB1    		cpir
@@ -229,7 +229,7 @@ C000:         	zmm_top		equ	0xC000
               		; Save and exit
 017C: 2B      		dec	hl
 017D: 72      		ld	(hl),d
-017E: 019D05  		ld	bc,alloc_bank_map
+017E: 015F07  		ld	bc,alloc_bank_map
 0181: B7      		or	a
 0182: ED42    		sbc	hl,bc
 0184: 6F      		ld	l,a
@@ -246,7 +246,7 @@ C000:         	zmm_top		equ	0xC000
               		; Find location in memory
 0186: 0600    		ld	b,0
 0188: 4F      		ld	c,a
-0189: 219D05  		ld	hl,alloc_bank_map
+0189: 215F07  		ld	hl,alloc_bank_map
 018C: 09      		add	hl,bc
               		
               		; Check owner
@@ -259,7 +259,7 @@ C000:         	zmm_top		equ	0xC000
 0192: 77      		ld	(hl),a
               		
               		; Increment banks free
-0193: 219C05  		ld	hl,banks_free
+0193: 215E07  		ld	hl,banks_free
 0196: 34      		inc	(hl)
 0197: C9      		ret
               		
@@ -285,9 +285,9 @@ C000:         	zmm_top		equ	0xC000
               	; Does not return
               	; Uses: N/A
 01A3:         	mem_empty:
-01A3: 11EE04  		ld	de,str_mem_empty
-01A6: CD8C04  		call	cpm_print
-01A9: C39F04  		jp	cpm_exit
+01A3: 11B006  		ld	de,str_mem_empty
+01A6: CD4E06  		call	cpm_print
+01A9: C36106  		jp	cpm_exit
               	
               	; -------------------------
               	; ******** Strings ********
@@ -296,28 +296,28 @@ C000:         	zmm_top		equ	0xC000
               	.area	_DATA
               	
               	; Inital string that prints when the program is started
-04C3:         	str_mem_init:
-04C3: 494E4954		defb	'INITIALIZED MEMORY MAP',0x0A,0x0D
-04C7: 49414C49	
-04CB: 5A454420	
-04CF: 4D454D4F	
-04D3: 5259204D	
-04D7: 41500A0D	
-04DB: 42414E4B		defb	'BANK COUNT = '
-04DF: 20434F55	
-04E3: 4E54203D	
-04E7: 20      	
-04E8:         	str_mem_init_cnt:
-04E8: 5858480A		defb	'XXH',0x0A,0x0D,'$'
-04EC: 0D24    	
+0685:         	str_mem_init:
+0685: 494E4954		defb	'INITIALIZED MEMORY MAP',0x0A,0x0D
+0689: 49414C49	
+068D: 5A454420	
+0691: 4D454D4F	
+0695: 5259204D	
+0699: 41500A0D	
+069D: 42414E4B		defb	'BANK COUNT = '
+06A1: 20434F55	
+06A5: 4E54203D	
+06A9: 20      	
+06AA:         	str_mem_init_cnt:
+06AA: 5858480A		defb	'XXH',0x0A,0x0D,'$'
+06AE: 0D24    	
               		
-04EE:         	str_mem_empty:
-04EE: 494E5355		defb	'INSUFFICIENT MEMORY',0x0A,0x0D,'$'
-04F2: 46464943	
-04F6: 49454E54	
-04FA: 204D454D	
-04FE: 4F52590A	
-0502: 0D24    	
+06B0:         	str_mem_empty:
+06B0: 494E5355		defb	'INSUFFICIENT MEMORY',0x0A,0x0D,'$'
+06B4: 46464943	
+06B8: 49454E54	
+06BC: 204D454D	
+06C0: 4F52590A	
+06C4: 0D24    	
               	
               	; ---------------------------
               	; ******** Variables ********
@@ -326,15 +326,15 @@ C000:         	zmm_top		equ	0xC000
               	.area	_BSS
               	
               	; Free bank count
-059C:         	banks_free:
-059C: 00      		defs	1
+075E:         	banks_free:
+075E: 00      		defs	1
               	
               	; Allocated bank map
               	; This 128 byte table keeps track of every single 16K bank
               	; that exists on the ZMM. Populated on startup
-059D:         	alloc_bank_map:
-059D: 00000000		defs	128
-05A1: 00...   	
+075F:         	alloc_bank_map:
+075F: 00000000		defs	128
+0763: 00...   	
               	#include "ZMM.asm"
               	;
               	;********************************************************************
@@ -360,19 +360,19 @@ C000:         	zmm_top		equ	0xC000
 01AC:         	zmm_init:
               		; Zero out control register
 01AC: 3E00    		ld	a,0
-01AE: 321D06  		ld	(zmm_ctrl_state),a
-01B1: 321E06  		ld	(zmm_bnk0_state),a
-01B4: 321F06  		ld	(zmm_bnk1_state),a
-01B7: 322006  		ld	(zmm_bnk2_state),a
-01BA: 322106  		ld	(zmm_bnk3_state),a
+01AE: 32DF07  		ld	(zmm_ctrl_state),a
+01B1: 32E007  		ld	(zmm_bnk0_state),a
+01B4: 32E107  		ld	(zmm_bnk1_state),a
+01B7: 32E207  		ld	(zmm_bnk2_state),a
+01BA: 32E307  		ld	(zmm_bnk3_state),a
               		
               		; See if we can swing in and out of virtual mode
 01BD: CDCF01  		call	zmm_set_virt
 01C0: CDDA01  		call	zmm_set_real
               		
               		; Tell the user that the ZMM is read
-01C3: 110405  		ld	de,str_zmm_init
-01C6: C38C04  		jp	cpm_print
+01C3: 11C606  		ld	de,str_zmm_init
+01C6: C34E06  		jp	cpm_print
               		
               	; Set the ZMM control register to the recorded state
               	; (zmm_ctrl_state) = New value of ZMM control register
@@ -380,7 +380,7 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses: AF
 01C9:         	zmm_ctrl_set:
-01C9: 3A1D06  		ld	a,(zmm_ctrl_state)
+01C9: 3ADF07  		ld	a,(zmm_ctrl_state)
 01CC: D334    		out	(zmm_ctrl),a
 01CE: C9      		ret
               		
@@ -389,9 +389,9 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses: AF
 01CF:         	zmm_set_virt:
-01CF: 3A1D06  		ld	a,(zmm_ctrl_state)
+01CF: 3ADF07  		ld	a,(zmm_ctrl_state)
 01D2: F601    		or	0b00000001
-01D4: 321D06  		ld	(zmm_ctrl_state),a
+01D4: 32DF07  		ld	(zmm_ctrl_state),a
 01D7: D334    		out	(zmm_ctrl),a
 01D9: C9      		ret
               		
@@ -400,9 +400,9 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses: AF
 01DA:         	zmm_set_real:
-01DA: 3A1D06  		ld	a,(zmm_ctrl_state)
+01DA: 3ADF07  		ld	a,(zmm_ctrl_state)
 01DD: E6FE    		and	0b11111110
-01DF: 321D06  		ld	(zmm_ctrl_state),a
+01DF: 32DF07  		ld	(zmm_ctrl_state),a
 01E2: D334    		out	(zmm_ctrl),a
 01E4: C9      		ret
               		
@@ -411,9 +411,9 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses: AF
 01E5:         	zmm_prgm_in:
-01E5: 3A1D06  		ld	a,(zmm_ctrl_state)
+01E5: 3ADF07  		ld	a,(zmm_ctrl_state)
 01E8: F602    		or	0b00000010
-01EA: 321D06  		ld	(zmm_ctrl_state),a
+01EA: 32DF07  		ld	(zmm_ctrl_state),a
 01ED: D334    		out	(zmm_ctrl),a
 01EF: C9      		ret
               		
@@ -422,9 +422,9 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses: AF
 01F0:         	zmm_prgm_out:
-01F0: 3A1D06  		ld	a,(zmm_ctrl_state)
+01F0: 3ADF07  		ld	a,(zmm_ctrl_state)
 01F3: E6FD    		and	0b11111101
-01F5: 321D06  		ld	(zmm_ctrl_state),a
+01F5: 32DF07  		ld	(zmm_ctrl_state),a
 01F8: D334    		out	(zmm_ctrl),a
 01FA: C9      		ret
               		
@@ -433,9 +433,9 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses: AF
 01FB:         	zmm_irq_inter:
-01FB: 3A1D06  		ld	a,(zmm_ctrl_state)
+01FB: 3ADF07  		ld	a,(zmm_ctrl_state)
 01FE: F604    		or	0b00000100
-0200: 321D06  		ld	(zmm_ctrl_state),a
+0200: 32DF07  		ld	(zmm_ctrl_state),a
 0203: D334    		out	(zmm_ctrl),a
 0205: C9      		ret
               		
@@ -444,9 +444,9 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses: AF
 0206:         	zmm_irq_normal:
-0206: 3A1D06  		ld	a,(zmm_ctrl_state)
+0206: 3ADF07  		ld	a,(zmm_ctrl_state)
 0209: E6FB    		and	0b11111011
-020B: 321D06  		ld	(zmm_ctrl_state),a
+020B: 32DF07  		ld	(zmm_ctrl_state),a
 020E: D334    		out	(zmm_ctrl),a
 0210: C9      		ret
               	
@@ -455,9 +455,9 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses: AF
 0211:         	zmm_irq_on:
-0211: 3A1D06  		ld	a,(zmm_ctrl_state)
+0211: 3ADF07  		ld	a,(zmm_ctrl_state)
 0214: F608    		or	0b00001000
-0216: 321D06  		ld	(zmm_ctrl_state),a
+0216: 32DF07  		ld	(zmm_ctrl_state),a
 0219: D334    		out	(zmm_ctrl),a
 021B: C9      		ret
               		
@@ -466,9 +466,9 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses: AF
 021C:         	zmm_irq_off:
-021C: 3A1D06  		ld	a,(zmm_ctrl_state)
+021C: 3ADF07  		ld	a,(zmm_ctrl_state)
 021F: E6F7    		and	0b11110111
-0221: 321D06  		ld	(zmm_ctrl_state),a
+0221: 32DF07  		ld	(zmm_ctrl_state),a
 0224: D334    		out	(zmm_ctrl),a
 0226: C9      		ret
               		
@@ -478,7 +478,7 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses: AF, B
 0227:         	zmm_bnk0_set:
-0227: 321E06  		ld	(zmm_bnk0_state),a
+0227: 32E007  		ld	(zmm_bnk0_state),a
 022A: D330    		out	(zmm_bnk0),a
 022C: C9      		ret
               		
@@ -488,7 +488,7 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses:  AF, B
 022D:         	zmm_bnk1_set:
-022D: 321F06  		ld	(zmm_bnk1_state),a
+022D: 32E107  		ld	(zmm_bnk1_state),a
 0230: D331    		out	(zmm_bnk1),a
 0232: C9      		ret
               		
@@ -498,7 +498,7 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses:  AF, B
 0233:         	zmm_bnk2_set:
-0233: 322006  		ld	(zmm_bnk2_state),a
+0233: 32E207  		ld	(zmm_bnk2_state),a
 0236: D332    		out	(zmm_bnk2),a
 0238: C9      		ret
               		
@@ -508,7 +508,7 @@ C000:         	zmm_top		equ	0xC000
               	; Returns nothing
               	; Uses:  AF, B
 0239:         	zmm_bnk3_set:
-0239: 322106  		ld	(zmm_bnk3_state),a
+0239: 32E307  		ld	(zmm_bnk3_state),a
 023C: D333    		out	(zmm_bnk3),a
 023E: C9      		ret
               		
@@ -519,12 +519,12 @@ C000:         	zmm_top		equ	0xC000
               	.area	_DATA
               	
               	; Inital string that prints when the program is started
-0504:         	str_zmm_init:
-0504: 494E4954		defb	'INITIALIZED ZMM',0x0A,0x0D,'$'
-0508: 49414C49	
-050C: 5A454420	
-0510: 5A4D4D0A	
-0514: 0D24    	
+06C6:         	str_zmm_init:
+06C6: 494E4954		defb	'INITIALIZED ZMM',0x0A,0x0D,'$'
+06CA: 49414C49	
+06CE: 5A454420	
+06D2: 5A4D4D0A	
+06D6: 0D24    	
               		
               	; ---------------------------
               	; ******** Variables ********
@@ -533,24 +533,24 @@ C000:         	zmm_top		equ	0xC000
               	.area	_BSS
               	
               	; Reflected state of control register
-061D:         	zmm_ctrl_state:
-061D: 00      		defs	1
+07DF:         	zmm_ctrl_state:
+07DF: 00      		defs	1
               		
               	; Bank 0 state
-061E:         	zmm_bnk0_state:
-061E: 00      		defs	1
+07E0:         	zmm_bnk0_state:
+07E0: 00      		defs	1
               		
               	; Bank 1 state
-061F:         	zmm_bnk1_state:
-061F: 00      		defs	1
+07E1:         	zmm_bnk1_state:
+07E1: 00      		defs	1
               		
               	; Bank 2 state
-0620:         	zmm_bnk2_state:
-0620: 00      		defs	1
+07E2:         	zmm_bnk2_state:
+07E2: 00      		defs	1
               		
               	; Bank 3 state
-0621:         	zmm_bnk3_state:
-0621: 00      		defs	1
+07E3:         	zmm_bnk3_state:
+07E3: 00      		defs	1
               		
               	#include "RESOURCE.asm"
               	;
@@ -602,14 +602,14 @@ C000:         	zmm_top		equ	0xC000
 0249:         	res_load:
               		; Set read flag
 0249: 3EFF    		ld	a,0xFF
-024B: 32C606  		ld	(res_do_read),a
+024B: 328808  		ld	(res_do_read),a
               	
               		; Save args
-024E: 22C706  		ld	(res_bankmap),hl
-0251: ED43C406		ld	(res_sectors),bc
+024E: 228908  		ld	(res_bankmap),hl
+0251: ED438608		ld	(res_sectors),bc
               	
               		; Virtual mode should be off while we do this
-0255: 3A1D06  		ld	a,(zmm_ctrl_state)
+0255: 3ADF07  		ld	a,(zmm_ctrl_state)
 0258: F5      		push	af
 0259: CDDA01  		call	zmm_set_real
               		
@@ -617,41 +617,41 @@ C000:         	zmm_top		equ	0xC000
 025C: CD6B02  		call	0$
               		
               		; Reset bank 3
-025F: 3A2106  		ld	a,(zmm_bnk3_state)
+025F: 3AE307  		ld	a,(zmm_bnk3_state)
 0262: D333    		out	(zmm_bnk3),a
               		
               		; Restore register
 0264: F1      		pop	af
-0265: 321D06  		ld	(zmm_ctrl_state),a
+0265: 32DF07  		ld	(zmm_ctrl_state),a
 0268: C3C901  		jp	zmm_ctrl_set
               		
               		; Allocate a new bank
 026B: CD6501  	0$:	call	mem_alloc
-026E: 2AC706  		ld	hl,(res_bankmap)
+026E: 2A8908  		ld	hl,(res_bankmap)
 0271: 77      		ld	(hl),a
 0272: 23      		inc	hl
-0273: 22C706  		ld	(res_bankmap),hl
+0273: 228908  		ld	(res_bankmap),hl
               		
               		; Set the bank in slot 3
 0276: D333    		out	(zmm_bnk3),a
               		
               		; Set DMA address
-0278: 114406  		ld	de,res_buffer
+0278: 110608  		ld	de,res_buffer
 027B: 0E1A    		ld	c,bios_set_dma
 027D: CD0500  		call	bdos
               		
               		; Set pointer	
 0280: 2100C0  		ld	hl,zmm_top
-0283: 22C906  		ld	(res_pointer),hl
+0283: 228B08  		ld	(res_pointer),hl
               		
               		; We will be loading up to 128 records at a time here
 0286: 0680    		ld	b,128
               		
               		; Do read operation
 0288: C5      	1$:	push	bc
-0289: 11CB06  		ld	de,res_fcb
+0289: 118D08  		ld	de,res_fcb
 028C: 0E14    		ld	c,bdos_read
-028E: 3AC606  		ld	a,(res_do_read)
+028E: 3A8808  		ld	a,(res_do_read)
 0291: B7      		or	a
 0292: C40500  		call	nz,bdos
               		
@@ -663,11 +663,11 @@ C000:         	zmm_top		equ	0xC000
 0299: CDCF01  		call	zmm_set_virt
               		
               		; Copy record to bank
-029C: 214406  		ld	hl,res_buffer
-029F: ED5BC906		ld	de,(res_pointer)
+029C: 210608  		ld	hl,res_buffer
+029F: ED5B8B08		ld	de,(res_pointer)
 02A3: 018000  		ld	bc,128
 02A6: EDB0    		ldir
-02A8: ED53C906		ld	(res_pointer),de
+02A8: ED538B08		ld	(res_pointer),de
               		
               		; Back to real mode
 02AC: CDDA01  		call	zmm_set_real 
@@ -676,9 +676,9 @@ C000:         	zmm_top		equ	0xC000
 02AF: C1      		pop	bc
               		
               		; Decrement record count
-02B0: 2AC406  		ld	hl,(res_sectors)
+02B0: 2A8608  		ld	hl,(res_sectors)
 02B3: 2B      		dec	hl
-02B4: 22C406  		ld	(res_sectors),hl
+02B4: 228608  		ld	(res_sectors),hl
 02B7: 7C      		ld	a,h
 02B8: B5      		or	l
 02B9: C8      		ret	z
@@ -689,10 +689,10 @@ C000:         	zmm_top		equ	0xC000
               	
               		; Zero buffer and reset read flag
 02BF: AF      	50$:	xor	a
-02C0: 32C606  		ld	(res_do_read),a
+02C0: 328808  		ld	(res_do_read),a
               		
-02C3: 214406  		ld	hl,res_buffer
-02C6: 114506  		ld	de,res_buffer+1
+02C3: 210608  		ld	hl,res_buffer
+02C6: 110708  		ld	de,res_buffer+1
 02C9: 017F00  		ld	bc,128-1
 02CC: 77      		ld	(hl),a
 02CD: EDB0    		ldir
@@ -707,7 +707,7 @@ C000:         	zmm_top		equ	0xC000
               	; Uses: all
 02D0:         	res_open:
               		; Virtual mode should be off while we do this
-02D0: 3A1D06  		ld	a,(zmm_ctrl_state)
+02D0: 3ADF07  		ld	a,(zmm_ctrl_state)
 02D3: F5      		push	af
 02D4: CDDA01  		call	zmm_set_real
               		
@@ -716,16 +716,16 @@ C000:         	zmm_top		equ	0xC000
               		
               		; Restore register
 02DA: F1      		pop	af
-02DB: 321D06  		ld	(zmm_ctrl_state),a
+02DB: 32DF07  		ld	(zmm_ctrl_state),a
 02DE: C3C901  		jp	zmm_ctrl_set
               		
               		; Let the user know we are loading stuff
 02E1: 0E09    	0$:	ld	c,bdos_print
-02E3: 111605  		ld	de,str_load_a
+02E3: 11D806  		ld	de,str_load_a
 02E6: CD0500  		call	bdos
               		
               		; Print resource name
-02E9: 213306  		ld	hl,res_current
+02E9: 21F507  		ld	hl,res_current
 02EC: 5E      		ld	e,(hl)
 02ED: 23      		inc	hl
 02EE: 56      		ld	d,(hl)
@@ -733,62 +733,62 @@ C000:         	zmm_top		equ	0xC000
               		
               		; Next string
 02F2: 0E09    		ld	c,bdos_print
-02F4: 111F05  		ld	de,str_load_b
+02F4: 11E106  		ld	de,str_load_b
 02F7: CD0500  		call	bdos
               		
               		; Print file name
-02FA: 112206  		ld	de,res_argument
+02FA: 11E407  		ld	de,res_argument
 02FD: CDB503  		call	res_printzt
               		
               		; CRLF
 0300: 0E09    		ld	c,bdos_print
-0302: 119905  		ld	de,str_crlf
+0302: 115B07  		ld	de,str_crlf
 0305: CD0500  		call	bdos
               		
               		; Detect if there is an argument
-0308: 3A2206  		ld	a,(res_argument)
+0308: 3AE407  		ld	a,(res_argument)
 030B: B7      		or	a
 030C: C21A03  		jp	nz,1$
               		
               		; No argument, error!
 030F: 0E09    		ld	c,bdos_print
-0311: 112605  		ld	de,str_arg_empty
+0311: 11E806  		ld	de,str_arg_empty
 0314: CD0500  		call	bdos
-0317: C39F04  		jp	cpm_exit
+0317: C36106  		jp	cpm_exit
               	
               		; Reset fields
 031A: AF      	1$:	xor	a
-031B: 21CB06  		ld	hl,res_fcb
-031E: 11CC06  		ld	de,res_fcb+1
+031B: 218D08  		ld	hl,res_fcb
+031E: 118E08  		ld	de,res_fcb+1
 0321: 012300  		ld	bc ,36-1
 0324: 77      		ld	(hl),a
 0325: EDB0    		ldir
               		
 0327: 3E20    		ld	a,0x20
-0329: 21CC06  		ld	hl,res_fcb_name
-032C: 11CD06  		ld	de,res_fcb_name+1
+0329: 218E08  		ld	hl,res_fcb_name
+032C: 118F08  		ld	de,res_fcb_name+1
 032F: 010A00  		ld	bc ,11-1
 0332: 77      		ld	(hl),a
 0333: EDB0    		ldir
               	
               		; Is there a prefix?
-0335: 212206  		ld	hl,res_argument
-0338: 3A2306  		ld	a,(res_argument+1)
+0335: 21E407  		ld	hl,res_argument
+0338: 3AE507  		ld	a,(res_argument+1)
 033B: FE3A    		cp	':'
 033D: C24F03  		jp	nz,2$
               		
               		; Set prefix
-0340: 3A2206  		ld	a,(res_argument)
+0340: 3AE407  		ld	a,(res_argument)
 0343: D640    		sub	'A'-1
 0345: FE11    		cp	17
 0347: D2AA03  		jp	nc,99$
-034A: 32CB06  		ld	(res_fcb_drive),a
+034A: 328D08  		ld	(res_fcb_drive),a
 034D: 23      		inc	hl
 034E: 23      		inc	hl
               	
               		; HL = Proper filename start
 034F: 0608    	2$:	ld	b,8
-0351: 11CC06  		ld	de,res_fcb_name
+0351: 118E08  		ld	de,res_fcb_name
               		
               		; Copy it over
 0354: 7E      	3$:	ld	a,(hl)
@@ -821,7 +821,7 @@ C000:         	zmm_top		equ	0xC000
               		
               		; Fill in extension
 037D: 0603    		ld	b,3
-037F: 11D406  		ld	de,res_fcb_type
+037F: 119608  		ld	de,res_fcb_type
               		
               		; Copy it over
 0382: 7E      	6$:	ld	a,(hl)
@@ -849,7 +849,7 @@ C000:         	zmm_top		equ	0xC000
               		
               		; It is filled in, attempt to open
 03A0: 0E0F    		ld	c,bdos_open
-03A2: 11CB06  		ld	de,res_fcb
+03A2: 118D08  		ld	de,res_fcb
 03A5: CD0500  		call	bdos
               		
               		; Check error
@@ -858,9 +858,9 @@ C000:         	zmm_top		equ	0xC000
               		
               		; Error!
 03AA: 0E09    	99$:	ld	c,bdos_print
-03AC: 113D05  		ld	de,str_arg_fail
+03AC: 11FF06  		ld	de,str_arg_fail
 03AF: CD0500  		call	bdos
-03B2: C39F04  		jp	cpm_exit
+03B2: C36106  		jp	cpm_exit
               		
               		
               	; Print a zero terminated string
@@ -891,7 +891,7 @@ C000:         	zmm_top		equ	0xC000
               	; Uses: AF, BC, DE, HL
 03C4:         	res_locate:
               		; Save resource
-03C4: ED533306		ld	(res_current),de
+03C4: ED53F507		ld	(res_current),de
               	
               		; Travel to the start of arguments
 03C8: 218100  		ld	hl,cpm_command+1
@@ -940,7 +940,7 @@ C000:         	zmm_top		equ	0xC000
 03FE: D2EC03  		jp	nc,3$
               		
               		; Ok, lets copy the argument into memory if it exists
-0401: 112206  		ld	de,res_argument
+0401: 11E407  		ld	de,res_argument
 0404: AF      		xor	a
 0405: 12      		ld	(de),a
               		
@@ -986,31 +986,31 @@ C000:         	zmm_top		equ	0xC000
               	.area	_DATA
               	
               	; Loading string components
-0516:         	str_load_a:
-0516: 4C4F4144		defb	'LOADING $'
-051A: 494E4720	
-051E: 24      	
+06D8:         	str_load_a:
+06D8: 4C4F4144		defb	'LOADING $'
+06DC: 494E4720	
+06E0: 24      	
               		
-051F:         	str_load_b:
-051F: 2046524F		defb	' FROM $'
-0523: 4D2024  	
+06E1:         	str_load_b:
+06E1: 2046524F		defb	' FROM $'
+06E5: 4D2024  	
               		
               	; Error messages
-0526:         	str_arg_empty:
-0526: 4E4F2041		defb	'NO ARGUMENT PROVIDED',0x0A,0x0D,'$'
-052A: 5247554D	
-052E: 454E5420	
-0532: 50524F56	
-0536: 49444544	
-053A: 0A0D24  	
+06E8:         	str_arg_empty:
+06E8: 4E4F2041		defb	'NO ARGUMENT PROVIDED',0x0A,0x0D,'$'
+06EC: 5247554D	
+06F0: 454E5420	
+06F4: 50524F56	
+06F8: 49444544	
+06FC: 0A0D24  	
               		
-053D:         	str_arg_fail:
-053D: 4641494C		defb	'FAILED TO OPEN FILE',0x0A,0x0D,'$'
-0541: 45442054	
-0545: 4F204F50	
-0549: 454E2046	
-054D: 494C450A	
-0551: 0D24    	
+06FF:         	str_arg_fail:
+06FF: 4641494C		defb	'FAILED TO OPEN FILE',0x0A,0x0D,'$'
+0703: 45442054	
+0707: 4F204F50	
+070B: 454E2046	
+070F: 494C450A	
+0713: 0D24    	
               		
               	; ---------------------------
               	; ******** Variables ********
@@ -1019,52 +1019,52 @@ C000:         	zmm_top		equ	0xC000
               	.area	_BSS
               	
               	; Stores a zero-terminated string for the resource argument
-0622:         	res_argument:
-0622: 00000000		defs	arg_size+1
-0626: 00...   	
+07E4:         	res_argument:
+07E4: 00000000		defs	arg_size+1
+07E8: 00...   	
               		
               	; Current resource being accessed
-0633:         	res_current:
-0633: 00000000		defs	arg_size+1
-0637: 00...   	
+07F5:         	res_current:
+07F5: 00000000		defs	arg_size+1
+07F9: 00...   	
               		
               	; Resource buffer
-0644:         	res_buffer:
-0644: 00000000		defs	128
-0648: 00...   	
+0806:         	res_buffer:
+0806: 00000000		defs	128
+080A: 00...   	
               		
               	; Sector counter
-06C4:         	res_sectors:
-06C4: 0000    		defs	2
+0886:         	res_sectors:
+0886: 0000    		defs	2
               		
               	; Do we need to read?
-06C6:         	res_do_read:
-06C6: 00      		defs	1
+0888:         	res_do_read:
+0888: 00      		defs	1
               		
               	; Resource bankmap
-06C7:         	res_bankmap:
-06C7: 0000    		defs	2
+0889:         	res_bankmap:
+0889: 0000    		defs	2
               		
               	; Loading pointer
-06C9:         	res_pointer:
-06C9: 0000    		defs	2
+088B:         	res_pointer:
+088B: 0000    		defs	2
               		
               	; File control block for use in loading resources
-06CB:         	res_fcb:
-06CB: 00000000		defs	36
-06CF: 00...   	
-06CB:         	res_fcb_drive	equ	res_fcb
-06CC:         	res_fcb_name	equ	res_fcb+1
-06D4:         	res_fcb_type	equ	res_fcb+9
-06D7:         	res_fcb_ex	equ	res_fcb+12
-06D8:         	res_fcb_s1	equ	res_fcb+13
-06D9:         	res_fcb_s2	equ	res_fcb+14
-06DA:         	res_fcb_rc	equ	res_fcb+15
-06DB:         	res_fcb_data	equ	res_fcb+16
-06EB:         	res_fcb_cr	equ	res_fcb+32
-06EC:         	res_fcb_r0	equ	res_fcb+33
-06ED:         	res_fcb_r1	equ	res_fcb+34
-06EE:         	res_fcb_r2	equ	res_fcb+35
+088D:         	res_fcb:
+088D: 00000000		defs	36
+0891: 00...   	
+088D:         	res_fcb_drive	equ	res_fcb
+088E:         	res_fcb_name	equ	res_fcb+1
+0896:         	res_fcb_type	equ	res_fcb+9
+0899:         	res_fcb_ex	equ	res_fcb+12
+089A:         	res_fcb_s1	equ	res_fcb+13
+089B:         	res_fcb_s2	equ	res_fcb+14
+089C:         	res_fcb_rc	equ	res_fcb+15
+089D:         	res_fcb_data	equ	res_fcb+16
+08AD:         	res_fcb_cr	equ	res_fcb+32
+08AE:         	res_fcb_r0	equ	res_fcb+33
+08AF:         	res_fcb_r1	equ	res_fcb+34
+08B0:         	res_fcb_r2	equ	res_fcb+35
               	#include "TRAP.asm"
               	;
               	;********************************************************************
@@ -1086,21 +1086,21 @@ C000:         	zmm_top		equ	0xC000
               	; Entry point for traps
 042D:         	trap_entry:
               		; Save value of SP
-042D: ED73EF06		ld	(trap_sp_value),sp
+042D: ED73B108		ld	(trap_sp_value),sp
 0431: 310070  		ld	sp,kri_stack
               		
               		; Save value of AF
 0434: F5      		push	af
               		
               		; Check in on device interrupts
-0435: CDBE04  		call	irq_handle
+0435: CD8006  		call	irq_handle
               		
               		; Grab the value of the ISR register
 0438: DB30    		in	a,(zmm_isr)
               		
               		; Do we actually need to handle a trap?
 043A: B7      		or	a
-043B: F25A04  		jp	p,trap_continue
+043B: F21C06  		jp	p,trap_continue
               		
               		; OK, a trap did occur.
               		; Are we doing "classic" I/O or extended I/O?
@@ -1112,38 +1112,445 @@ C000:         	zmm_top		equ	0xC000
 0445: DA5104  		jp	c,0$
               		
               		; In it is
-0448: CDBF04  		call	in_handle
+0448: CD8106  		call	in_handle
 044B: 32FF6F  		ld	(trap_a_value),a
-044E: C35A04  		jp	trap_continue
+044E: C31C06  		jp	trap_continue
               		
               		; Out it is
 0451: 3AFF6F  	0$:	ld	a,(trap_a_value)
-0454: CDC204  		call	out_handle
-0457: C35A04  		jp	trap_continue
-              		
-              		
-              		
-              		
-              		
-              		
-              		
+0454: CD8406  		call	out_handle
+0457: C31C06  		jp	trap_continue
+              	
+              	
               	; It's an extended I/O instruction
 045A:         	trap_io_ext:
+              		; Input or output?
+045A: 0F      		rrca
+045B: DAD604  		jp	c,trap_io_ex_out
+              		
+              		; Extended input instruction
+              		; INI-class?
+045E: 0F      		rrca
+045F: DA3005  		jp	c,trap_io_inx
+              		
+              		; Left or right column
+0462: 0F      		rrca
+0463: DA8D04  		jp	c,0$
+              		
+              		; Left column
+              		; B, D, H, or 0?
+0466: 0F      		rrca
+0467: DA7C04  		jp	c,1$
+              		
+              		; B or H?
+046A: 0F      		rrca
+046B: DA7504  		jp	c,2$
+              		
+              		; It's B
+046E: CD8106  		call	in_handle
+0471: 47      		ld	b,a
+0472: C3B704  		jp	90$
+              		
+              		; It's H	
+0475: CD8106  	2$:	call	in_handle
+0478: 67      		ld	h,a
+0479: C3B704  		jp	90$
+              	
+              		; D or 0?
+047C: 0F      	1$:	rrca
+047D: DA8704  		jp	c,3$
+              	
+              		; It's D
+0480: CD8106  		call	in_handle
+0483: 57      		ld	d,a
+0484: C3B704  		jp	90$
+              		
+              		; It's 0
+0487: CD8106  	3$:	call	in_handle
+048A: C3B704  		jp	90$
               		
               		
+              		; Right column
+              		; C, E, L, or A?
+048D: 0F      	0$:	rrca
+048E: DAA304  		jp	c,4$
               		
-              		; If the number is even, then it will ALWAYS be an out instruction
+              		; C or L?
+0491: 0F      		rrca
+0492: DA9C04  		jp	c,5$
               		
-              	; Continue execution
-045A:         	trap_continue:
-              		; Restore AF
-045A: F1      		pop	af
+              		; It's C
+0495: CD8106  		call	in_handle
+0498: 4F      		ld	c,a
+0499: C3B704  		jp	90$
+              	
+              		; It's L
+049C: CD8106  	5$:	call	in_handle
+049F: 6F      		ld	l,a
+04A0: C3B704  		jp	90$
+              		
+              		; E or A?
+04A3: 0F      	4$:	rrca
+04A4: DAAE04  		jp	c,6$
+              		
+              		; It's E
+04A7: CD8106  		call	in_handle
+04AA: 5F      		ld	e,a
+04AB: C3B704  		jp	90$
+              	
+              		; It's A
+04AE: CD8106  	6$:	call	in_handle
+04B1: 32FF6F  		ld	(trap_a_value),a
+04B4: C3B704  		jp	90$
+              		
+              		; Extended IN instructions require special flag states
+              		; lets set them and return
+04B7: E5      	90$:	push	hl
+04B8: 21FE6F  		ld	hl,trap_f_value
+04BB: CB46    		bit	0,(hl)
+04BD: E1      		pop	hl
+              		
+              		; If it's zero, we don't need the carry flag
+04BE: CACC04  		jp	z,91$ 
+              		
+              		; Update flags and persist carry flag
+04C1: B7      		or	a
+04C2: 37      		scf
+04C3: 3AFF6F  		ld	a,(trap_a_value)
               		
               		; Restore old SP
-045B: ED7BEF06		ld	sp,(trap_sp_value)
+04C6: ED7BB108		ld	sp,(trap_sp_value)
               		
               		; Go back to the virtual machine
-045F: ED45    		retn
+04CA: ED45    		retn
+              		
+              		; Update flags and reset carry flag
+04CC: B7      	91$:	or	a
+04CD: 3AFF6F  		ld	a,(trap_a_value)
+              		
+              		; Restore old SP
+04D0: ED7BB108		ld	sp,(trap_sp_value)
+              		
+              		; Go back to the virtual machine
+04D4: ED45    		retn
+              		
+              	; Extended output instruction
+04D6:         	trap_io_ex_out:
+              		; OUTI-class?
+04D6: 0F      		rrca
+04D7: DAA605  		jp	c,trap_io_outx
+              		
+              		; Left or right column?
+04DA: 0F      		rrca
+04DB: DA0605  		jp	c,0$
+              		
+              		; Left column
+              		; B, D, H, or 0?
+04DE: 0F      		rrca
+04DF: DAF404  		jp	c,1$
+              		
+              		; B or H?
+04E2: 0F      		rrca
+04E3: DAED04  		jp	c,2$
+              		
+              		; It's B
+04E6: 78      		ld	a,b
+04E7: CD8406  		call	out_handle
+04EA: C31C06  		jp	trap_continue
+              		
+              		; It's H	
+04ED: 7C      	2$:	ld	a,h
+04EE: CD8406  		call	out_handle
+04F1: C31C06  		jp	trap_continue
+              	
+              		; D or 0?
+04F4: 0F      	1$:	rrca
+04F5: DAFF04  		jp	c,3$
+              	
+              		; It's D
+04F8: 7A      		ld	a,d
+04F9: CD8406  		call	out_handle
+04FC: C31C06  		jp	trap_continue
+              		
+              		; It's 0
+04FF: AF      	3$:	xor	a
+0500: CD8406  		call	out_handle
+0503: C31C06  		jp	trap_continue
+              		
+              		
+              		; Right column
+              		; C, E, L, or A?
+0506: 0F      	0$:	rrca
+0507: DA1C05  		jp	c,4$
+              		
+              		; C or L?
+050A: 0F      		rrca
+050B: DA1505  		jp	c,5$
+              		
+              		; It's C
+050E: 79      		ld	a,c
+050F: CD8406  		call	out_handle
+0512: C31C06  		jp	trap_continue
+              	
+              		; It's L
+0515: 7D      	5$:	ld	a,l
+0516: CD8406  		call	out_handle
+0519: C31C06  		jp	trap_continue
+              		
+              		; E or A?
+051C: 0F      	4$:	rrca
+051D: DA2705  		jp	c,6$
+              		
+              		; It's E
+0520: 7B      		ld	a,e
+0521: CD8406  		call	out_handle
+0524: C31C06  		jp	trap_continue
+              	
+              		; It's A
+0527: 3AFF6F  	6$:	ld	a,(trap_a_value)
+052A: CD8406  		call	out_handle
+052D: C31C06  		jp	trap_continue
+              	
+              	
+              		; INX class instructions
+              		; The CPU should handle the differences between INX and INXR
+0530:         	trap_io_inx:
+              		; Left or right column?
+0530: 0F      		rrca
+0531: DA6D05  		jp	c,trap_io_ind
+              		
+              		; Left column, it's 'I' class
+0534: E5      		push	hl
+              		
+              		; Attempt to figure out the original virtual address
+0535: 2B      		dec	hl	; Decrement to reverse 'I' class instruction
+0536: 7C      		ld	a,h
+0537: 07      		rlca
+0538: DA4B05  		jp	c,0$
+              		
+              		; 0x0000 - 0x7FFF
+053B: 07      		rlca
+053C: DA4505  		jp	c,1$
+              		
+              		; 0x0000 - 0x3FFF
+053F: 3AE007  		ld	a,(zmm_bnk0_state)
+0542: C35805  		jp	3$
+              		
+              		; 0x4000 - 0x7FFF
+0545: 3AE107  	1$:	ld	a,(zmm_bnk1_state)
+0548: C35805  		jp	3$
+              			
+              		; 0x8000 - 0xFFFF
+054B: 07      	0$:	rlca
+054C: DA5505  		jp	c,2$
+              		
+              		; 0x8000 - 0xBFFF
+054F: 3AE207  		ld	a,(zmm_bnk2_state)
+0552: C35805  		jp	3$
+              	
+              		; 0xC000 - 0xFFFF
+0555: 3AE307  	2$:	ld	a,(zmm_bnk3_state)
+              	
+              		; Remove write protection and set
+0558: E67F    	3$:	and	0b01111111
+055A: D333    		out	(zmm_bnk3),a
+              		
+              		; Correct HL
+055C: 3EC0    		ld	a,0b11000000
+055E: B4      		or	h
+055F: 67      		ld	h,a
+              		
+              		; Do the input
+0560: CD8106  		call	in_handle
+0563: 77      		ld	(hl),a
+              		
+              		; Fix banks
+0564: 3AE307  		ld	a,(zmm_bnk3_state)
+0567: D333    		out	(zmm_bnk3),a
+              		
+              		; Restore and continue
+0569: E1      		pop	hl
+056A: C31C06  		jp	trap_continue
+              		
+              		; Right column, it's 'D' class
+056D:         	trap_io_ind:
+056D: E5      		push	hl
+              		
+              		; Attempt to figure out the original virtual address
+056E: 23      		inc	hl	; Increment to reverse 'D' class instruction
+056F: 7C      		ld	a,h
+0570: 07      		rlca
+0571: DA8405  		jp	c,0$
+              		
+              		; 0x0000 - 0x7FFF
+0574: 07      		rlca
+0575: DA7E05  		jp	c,1$
+              		
+              		; 0x0000 - 0x3FFF
+0578: 3AE007  		ld	a,(zmm_bnk0_state)
+057B: C39105  		jp	3$
+              		
+              		; 0x4000 - 0x7FFF
+057E: 3AE107  	1$:	ld	a,(zmm_bnk1_state)
+0581: C39105  		jp	3$
+              			
+              		; 0x8000 - 0xFFFF
+0584: 07      	0$:	rlca
+0585: DA8E05  		jp	c,2$
+              		
+              		; 0x8000 - 0xBFFF
+0588: 3AE207  		ld	a,(zmm_bnk2_state)
+058B: C39105  		jp	3$
+              	
+              		; 0xC000 - 0xFFFF
+058E: 3AE307  	2$:	ld	a,(zmm_bnk3_state)
+              	
+              		; Remove write protection and set
+0591: E67F    	3$:	and	0b01111111
+0593: D333    		out	(zmm_bnk3),a
+              		
+              		; Correct HL
+0595: 3EC0    		ld	a,0b11000000
+0597: B4      		or	h
+0598: 67      		ld	h,a
+              		
+              		; Do the input
+0599: CD8106  		call	in_handle
+059C: 77      		ld	(hl),a
+              		
+              		; Fix banks
+059D: 3AE307  		ld	a,(zmm_bnk3_state)
+05A0: D333    		out	(zmm_bnk3),a
+              		
+              		; Restore and continue
+05A2: E1      		pop	hl
+05A3: C31C06  		jp	trap_continue
+              	
+              		; OUTX-class instructions
+              		; The CPU should handle the differences between OUTX and OTXR
+05A6:         	trap_io_outx:
+              		; Left or right column?
+05A6: 0F      		rrca
+05A7: DAE305  		jp	c,trap_io_outd
+              		
+              		; Left column, it's 'I' class
+05AA: E5      		push	hl
+              		
+              		; Attempt to figure out the original virtual address
+05AB: 2B      		dec	hl	; Decrement to reverse 'I' class instruction
+05AC: 7C      		ld	a,h
+05AD: 07      		rlca
+05AE: DAC105  		jp	c,0$
+              		
+              		; 0x0000 - 0x7FFF
+05B1: 07      		rlca
+05B2: DABB05  		jp	c,1$
+              		
+              		; 0x0000 - 0x3FFF
+05B5: 3AE007  		ld	a,(zmm_bnk0_state)
+05B8: C3CE05  		jp	3$
+              		
+              		; 0x4000 - 0x7FFF
+05BB: 3AE107  	1$:	ld	a,(zmm_bnk1_state)
+05BE: C3CE05  		jp	3$
+              			
+              		; 0x8000 - 0xFFFF
+05C1: 07      	0$:	rlca
+05C2: DACB05  		jp	c,2$
+              		
+              		; 0x8000 - 0xBFFF
+05C5: 3AE207  		ld	a,(zmm_bnk2_state)
+05C8: C3CE05  		jp	3$
+              	
+              		; 0xC000 - 0xFFFF
+05CB: 3AE307  	2$:	ld	a,(zmm_bnk3_state)
+              	
+              		; Remove write protection and set
+05CE: E67F    	3$:	and	0b01111111
+05D0: D333    		out	(zmm_bnk3),a
+              		
+              		; Correct HL
+05D2: 3EC0    		ld	a,0b11000000
+05D4: B4      		or	h
+05D5: 67      		ld	h,a
+              		
+              		; Do the output
+05D6: 7E      		ld	a,(hl)
+05D7: CD8406  		call	out_handle
+              		
+              		; Fix banks
+05DA: 3AE307  		ld	a,(zmm_bnk3_state)
+05DD: D333    		out	(zmm_bnk3),a
+              		
+              		; Restore and continue
+05DF: E1      		pop	hl
+05E0: C31C06  		jp	trap_continue
+              		
+              		; Right column, it's 'D' class
+05E3:         	trap_io_outd:
+05E3: E5      		push	hl
+              		
+              		; Attempt to figure out the original virtual address
+05E4: 23      		inc	hl	; Increment to reverse 'D' class instruction
+05E5: 7C      		ld	a,h
+05E6: 07      		rlca
+05E7: DAFA05  		jp	c,0$
+              		
+              		; 0x0000 - 0x7FFF
+05EA: 07      		rlca
+05EB: DAF405  		jp	c,1$
+              		
+              		; 0x0000 - 0x3FFF
+05EE: 3AE007  		ld	a,(zmm_bnk0_state)
+05F1: C30706  		jp	3$
+              		
+              		; 0x4000 - 0x7FFF
+05F4: 3AE107  	1$:	ld	a,(zmm_bnk1_state)
+05F7: C30706  		jp	3$
+              			
+              		; 0x8000 - 0xFFFF
+05FA: 07      	0$:	rlca
+05FB: DA0406  		jp	c,2$
+              		
+              		; 0x8000 - 0xBFFF
+05FE: 3AE207  		ld	a,(zmm_bnk2_state)
+0601: C30706  		jp	3$
+              	
+              		; 0xC000 - 0xFFFF
+0604: 3AE307  	2$:	ld	a,(zmm_bnk3_state)
+              	
+              		; Remove write protection and set
+0607: E67F    	3$:	and	0b01111111
+0609: D333    		out	(zmm_bnk3),a
+              		
+              		; Correct HL
+060B: 3EC0    		ld	a,0b11000000
+060D: B4      		or	h
+060E: 67      		ld	h,a
+              		
+              		; Do the output
+060F: 7E      		ld	a,(hl)
+0610: CD8406  		call	out_handle
+              		
+              		; Fix banks
+0613: 3AE307  		ld	a,(zmm_bnk3_state)
+0616: D333    		out	(zmm_bnk3),a
+              		
+              		; Restore and continue
+0618: E1      		pop	hl
+0619: C31C06  		jp	trap_continue
+              	
+              		
+              	; Continue execution
+061C:         	trap_continue:
+              		; Restore AF
+061C: F1      		pop	af
+              		
+              		; Restore old SP
+061D: ED7BB108		ld	sp,(trap_sp_value)
+              		
+              		; Go back to the virtual machine
+0621: ED45    		retn
               		
               	; ----------------------------
               	; ********  Functions ********
@@ -1155,14 +1562,14 @@ C000:         	zmm_top		equ	0xC000
               	;
               	; Returns nothing
               	; Uses: AF, HL
-0461:         	trap_init:
+0623:         	trap_init:
               		; Install trap vector
-0461: 3EC3    		ld	a,0xC3
-0463: 326600  		ld	(nmi_address),a
-0466: 212D04  		ld	hl,trap_entry
-0469: 226700  		ld	(nmi_vector),hl
+0623: 3EC3    		ld	a,0xC3
+0625: 326600  		ld	(nmi_address),a
+0628: 212D04  		ld	hl,trap_entry
+062B: 226700  		ld	(nmi_vector),hl
               		
-046C: C9      		ret
+062E: C9      		ret
               		
               		
               	
@@ -1173,8 +1580,8 @@ C000:         	zmm_top		equ	0xC000
               	.area	_BSS
               	
               	; Value of untrapped SP value
-06EF:         	trap_sp_value:
-06EF: 0000    		defs	2
+08B1:         	trap_sp_value:
+08B1: 0000    		defs	2
               	
               	; --------------------------------
               	; ******** KRISYS Startup ********
@@ -1183,27 +1590,27 @@ C000:         	zmm_top		equ	0xC000
               	.area	_TEXT
               		
               		; KRISYS entry point
-046D:         	kri_start:	
+062F:         	kri_start:	
               		; Set up stack
-046D: F3      		di
-046E: 310070  		ld	sp,kri_stack
-0471: 219F04  		ld	hl,cpm_exit
-0474: E5      		push	hl
+062F: F3      		di
+0630: 310070  		ld	sp,kri_stack
+0633: 216106  		ld	hl,cpm_exit
+0636: E5      		push	hl
               		
               		; Print "hello" splash
-0475: 0E09    		ld	c,bdos_print
-0477: 115305  		ld	de,str_splash
-047A: CD0500  		call	bdos
+0637: 0E09    		ld	c,bdos_print
+0639: 111507  		ld	de,str_splash
+063C: CD0500  		call	bdos
               		
               		; Initalize subcomponents
-047D: CDAC01  		call	zmm_init
-0480: CD6104  		call	trap_init
-0483: CD0301  		call	mem_map_init
-0486: CD3F02  		call	res_init
+063F: CDAC01  		call	zmm_init
+0642: CD2306  		call	trap_init
+0645: CD0301  		call	mem_map_init
+0648: CD3F02  		call	res_init
               		
               		
               		; Start the core
-0489: C3BB04  		jp	core_start
+064B: C37D06  		jp	core_start
               		
               	; ------------------------------
               	; ******** CP/M Service ********
@@ -1214,30 +1621,30 @@ C000:         	zmm_top		equ	0xC000
               	;
               	; Returns nothing
               	; Uses: All
-048C:         	cpm_print:
+064E:         	cpm_print:
               		; Save control register state
-048C: 3A1D06  		ld	a,(zmm_ctrl_state)
-048F: F5      		push	af
+064E: 3ADF07  		ld	a,(zmm_ctrl_state)
+0651: F5      		push	af
               		
               		; Go to real mode
-0490: CDDA01  		call zmm_set_real
+0652: CDDA01  		call zmm_set_real
               		
               		; Do BDOS call
-0493: 0E09    		ld	c,bdos_print
-0495: CD0500  		call	bdos
+0655: 0E09    		ld	c,bdos_print
+0657: CD0500  		call	bdos
               		
               		; Restore register
-0498: F1      		pop	af
-0499: 321D06  		ld	(zmm_ctrl_state),a
-049C: C3C901  		jp	zmm_ctrl_set
+065A: F1      		pop	af
+065B: 32DF07  		ld	(zmm_ctrl_state),a
+065E: C3C901  		jp	zmm_ctrl_set
               		
               	; Go back to CP/M
               	;
               	; Does not return
               	; Uses: N/A
-049F:         	cpm_exit:
-049F: 0E00    		ld	c,bdos_exit
-04A1: CD0500  		call	bdos	
+0661:         	cpm_exit:
+0661: 0E00    		ld	c,bdos_exit
+0663: CD0500  		call	bdos	
               		
               	; ----------------------
               	; ******** Misc ********
@@ -1248,23 +1655,23 @@ C000:         	zmm_top		equ	0xC000
               	;
               	; Returns DE = result
               	; Uses: AF, DE
-04A4: 57      	tohex:	ld	d,a
-04A5: CDAF04  		call	0$
-04A8: 5F      		ld	e,a
-04A9: 7A      		ld	a,d
-04AA: CDB304  		call	1$
-04AD: 57      		ld	d,a
-04AE: C9      		ret
+0666: 57      	tohex:	ld	d,a
+0667: CD7106  		call	0$
+066A: 5F      		ld	e,a
+066B: 7A      		ld	a,d
+066C: CD7506  		call	1$
+066F: 57      		ld	d,a
+0670: C9      		ret
               		
-04AF: 1F      	0$:	rra
-04B0: 1F      		rra
-04B1: 1F      		rra
-04B2: 1F      		rra
-04B3: F6F0    	1$:	or	0xF0
-04B5: 27      		daa
-04B6: C6A0    		add	a,0xA0
-04B8: CE40    		adc	a,0x40
-04BA: C9      		ret
+0671: 1F      	0$:	rra
+0672: 1F      		rra
+0673: 1F      		rra
+0674: 1F      		rra
+0675: F6F0    	1$:	or	0xF0
+0677: 27      		daa
+0678: C6A0    		add	a,0xA0
+067A: CE40    		adc	a,0x40
+067C: C9      		ret
               	
               	; -------------------------
               	; ******** Strings ********
@@ -1273,29 +1680,29 @@ C000:         	zmm_top		equ	0xC000
               	.area	_DATA
               	
               	; Inital string that prints when the program is started
-0553:         	str_splash:
-0553: 4944454E		defb	'IDENTITY KRISYS HYPERVISOR, CP/M EDT.',0x0A,0x0D
-0557: 54495459	
-055B: 204B5249	
-055F: 53595320	
-0563: 48595045	
-0567: 52564953	
-056B: 4F522C20	
-056F: 43502F4D	
-0573: 20454454	
-0577: 2E0A0D  	
-057A: 5645522E		defb	'VER. 0.0.1, GAVIN TERSTEEG 2024'
-057E: 20302E30	
-0582: 2E312C20	
-0586: 47415649	
-058A: 4E205445	
-058E: 52535445	
-0592: 45472032	
-0596: 303234  	
+0715:         	str_splash:
+0715: 4944454E		defb	'IDENTITY KRISYS HYPERVISOR, CP/M EDT.',0x0A,0x0D
+0719: 54495459	
+071D: 204B5249	
+0721: 53595320	
+0725: 48595045	
+0729: 52564953	
+072D: 4F522C20	
+0731: 43502F4D	
+0735: 20454454	
+0739: 2E0A0D  	
+073C: 5645522E		defb	'VER. 0.0.1, GAVIN TERSTEEG 2024'
+0740: 20302E30	
+0744: 2E312C20	
+0748: 47415649	
+074C: 4E205445	
+0750: 52535445	
+0754: 45472032	
+0758: 303234  	
               		
               	; Carriage return, line break
-0599:         	str_crlf:
-0599: 0A0D24  		defb	0x0A,0x0D,'$' 
+075B:         	str_crlf:
+075B: 0A0D24  		defb	0x0A,0x0D,'$' 
               		
               	
               	; ---------------------------
@@ -1305,8 +1712,8 @@ C000:         	zmm_top		equ	0xC000
               	.area	_TEXT
               	
               	; Start of ColecoVision core
-04BB:         	core_start:
-04BB: C39F04  		jp	cpm_exit
+067D:         	core_start:
+067D: C36106  		jp	cpm_exit
               	
               	
               	; -----------------------------------
@@ -1317,8 +1724,8 @@ C000:         	zmm_top		equ	0xC000
               		
               	; Handle "real" interrupts from devices (if needed)
               	; All registers except AF must remain unchanged!
-04BE:         	irq_handle:
-04BE: C9      		ret
+0680:         	irq_handle:
+0680: C9      		ret
               		
               	
               	; -----------------------------
@@ -1330,37 +1737,37 @@ C000:         	zmm_top		equ	0xC000
               	; Handle an IN instruction
               	; Inputted value should be returned in register A
               	; All registers except AF must remain unchanged!
-04BF:         	in_handle:
-04BF: 3EFF    		ld	a,0xFF
-04C1: C9      		ret
+0681:         	in_handle:
+0681: 3EFF    		ld	a,0xFF
+0683: C9      		ret
               	
               	; Handle an OUT instruction
               	; A = Value outputted by virtual machine
               	; All registers except AF must remain unchanged!
-04C2:         	out_handle:
-04C2: C9      		ret
+0684:         	out_handle:
+0684: C9      		ret
 
 
 ; +++ segments +++
 
-#CODE _TEXT    = $0100 =   256,  size = $03C3 =   963
-#CODE _DATA    = $04C3 =  1219,  size = $00D9 =   217
-#DATA _BSS     = $059C =  1436,  size = $0155 =   341
+#CODE _TEXT    = $0100 =   256,  size = $0585 =  1413
+#CODE _DATA    = $0685 =  1669,  size = $00D9 =   217
+#DATA _BSS     = $075E =  1886,  size = $0155 =   341
 
 ; +++ global symbols +++
 
-_BSS             = $059C =  1436  _BSS    KRISYS.asm:28 (unused)
-_BSS_end         = $06F1 =  1777  _BSS    KRISYS.asm:28
+_BSS             = $075E =  1886  _BSS    KRISYS.asm:28 (unused)
+_BSS_end         = $08B3 =  2227  _BSS    KRISYS.asm:28
 _BSS_size        = $0155 =   341  _BSS    KRISYS.asm:28 (unused)
-_DATA            = $04C3 =  1219  _DATA   KRISYS.asm:27 (unused)
-_DATA_end        = $059C =  1436  _DATA   KRISYS.asm:27
+_DATA            = $0685 =  1669  _DATA   KRISYS.asm:27 (unused)
+_DATA_end        = $075E =  1886  _DATA   KRISYS.asm:27
 _DATA_size       = $00D9 =   217  _DATA   KRISYS.asm:27 (unused)
 _TEXT            = $0100 =   256  _TEXT   KRISYS.asm:26 (unused)
-_TEXT_end        = $04C3 =  1219  _TEXT   KRISYS.asm:26
-_TEXT_size       = $03C3 =   963  _TEXT   KRISYS.asm:26 (unused)
-alloc_bank_map   = $059D =  1437  _BSS    MEMORY.asm:211
+_TEXT_end        = $0685 =  1669  _TEXT   KRISYS.asm:26
+_TEXT_size       = $0585 =  1413  _TEXT   KRISYS.asm:26 (unused)
+alloc_bank_map   = $075F =  1887  _BSS    MEMORY.asm:211
 arg_size         = $0010 =    16  _BSS    RESOURCE.asm:17
-banks_free       = $059C =  1436  _BSS    MEMORY.asm:205
+banks_free       = $075E =  1886  _BSS    MEMORY.asm:205
 bdos             = $0005 =     5  _TEXT   KRISYS.asm:49
 bdos_con_in      = $0001 =     1  _TEXT   KRISYS.asm:51 (unused)
 bdos_con_out     = $0002 =     2  _TEXT   KRISYS.asm:52
@@ -1369,14 +1776,14 @@ bdos_open        = $000F =    15  _TEXT   KRISYS.asm:54
 bdos_print       = $0009 =     9  _TEXT   KRISYS.asm:53
 bdos_read        = $0014 =    20  _TEXT   KRISYS.asm:55
 bios_set_dma     = $001A =    26  _TEXT   KRISYS.asm:56
-core_start       = $04BB =  1211  _TEXT   KCOLECO.asm:17
+core_start       = $067D =  1661  _TEXT   KCOLECO.asm:17
 cpm_command      = $0080 =   128  _TEXT   KRISYS.asm:58
-cpm_exit         = $049F =  1183  _TEXT   KRISYS.asm:160
-cpm_print        = $048C =  1164  _TEXT   KRISYS.asm:139
-in_handle        = $04BF =  1215  _TEXT   KCOLECO.asm:42
-irq_handle       = $04BE =  1214  _TEXT   KCOLECO.asm:29
+cpm_exit         = $0661 =  1633  _TEXT   KRISYS.asm:160
+cpm_print        = $064E =  1614  _TEXT   KRISYS.asm:139
+in_handle        = $0681 =  1665  _TEXT   KCOLECO.asm:42
+irq_handle       = $0680 =  1664  _TEXT   KCOLECO.asm:29
 kri_stack        = $7000 = 28672  _TEXT   KRISYS.asm:88
-kri_start        = $046D =  1133  _TEXT   KRISYS.asm:108
+kri_start        = $062F =  1583  _TEXT   KRISYS.asm:108
 mem_alloc        = $0165 =   357  _TEXT   MEMORY.asm:103
 mem_empty        = $01A3 =   419  _TEXT   MEMORY.asm:177
 mem_free         = $0186 =   390  _TEXT   MEMORY.asm:135
@@ -1387,71 +1794,76 @@ nabu_ay_data     = $0040 =    64  _TEXT   KRISYS.asm:84 (unused)
 nabu_nctl        = $0000 =     0  _TEXT   KRISYS.asm:83 (unused)
 nmi_address      = $0066 =   102  _TEXT   KRISYS.asm:79
 nmi_vector       = $0067 =   103  _TEXT   KRISYS.asm:80
-out_handle       = $04C2 =  1218  _TEXT   KCOLECO.asm:49
-res_argument     = $0622 =  1570  _BSS    RESOURCE.asm:454
-res_bankmap      = $06C7 =  1735  _BSS    RESOURCE.asm:474
-res_buffer       = $0644 =  1604  _BSS    RESOURCE.asm:462
-res_current      = $0633 =  1587  _BSS    RESOURCE.asm:458
-res_do_read      = $06C6 =  1734  _BSS    RESOURCE.asm:470
-res_fcb          = $06CB =  1739  _BSS    RESOURCE.asm:482
-res_fcb_cr       = $06EB =  1771  _BSS    RESOURCE.asm:492 (unused)
-res_fcb_data     = $06DB =  1755  _BSS    RESOURCE.asm:491 (unused)
-res_fcb_drive    = $06CB =  1739  _BSS    RESOURCE.asm:484
-res_fcb_ex       = $06D7 =  1751  _BSS    RESOURCE.asm:487 (unused)
-res_fcb_name     = $06CC =  1740  _BSS    RESOURCE.asm:485
-res_fcb_r0       = $06EC =  1772  _BSS    RESOURCE.asm:493 (unused)
-res_fcb_r1       = $06ED =  1773  _BSS    RESOURCE.asm:494 (unused)
-res_fcb_r2       = $06EE =  1774  _BSS    RESOURCE.asm:495 (unused)
-res_fcb_rc       = $06DA =  1754  _BSS    RESOURCE.asm:490 (unused)
-res_fcb_s1       = $06D8 =  1752  _BSS    RESOURCE.asm:488 (unused)
-res_fcb_s2       = $06D9 =  1753  _BSS    RESOURCE.asm:489 (unused)
-res_fcb_type     = $06D4 =  1748  _BSS    RESOURCE.asm:486
+out_handle       = $0684 =  1668  _TEXT   KCOLECO.asm:49
+res_argument     = $07E4 =  2020  _BSS    RESOURCE.asm:454
+res_bankmap      = $0889 =  2185  _BSS    RESOURCE.asm:474
+res_buffer       = $0806 =  2054  _BSS    RESOURCE.asm:462
+res_current      = $07F5 =  2037  _BSS    RESOURCE.asm:458
+res_do_read      = $0888 =  2184  _BSS    RESOURCE.asm:470
+res_fcb          = $088D =  2189  _BSS    RESOURCE.asm:482
+res_fcb_cr       = $08AD =  2221  _BSS    RESOURCE.asm:492 (unused)
+res_fcb_data     = $089D =  2205  _BSS    RESOURCE.asm:491 (unused)
+res_fcb_drive    = $088D =  2189  _BSS    RESOURCE.asm:484
+res_fcb_ex       = $0899 =  2201  _BSS    RESOURCE.asm:487 (unused)
+res_fcb_name     = $088E =  2190  _BSS    RESOURCE.asm:485
+res_fcb_r0       = $08AE =  2222  _BSS    RESOURCE.asm:493 (unused)
+res_fcb_r1       = $08AF =  2223  _BSS    RESOURCE.asm:494 (unused)
+res_fcb_r2       = $08B0 =  2224  _BSS    RESOURCE.asm:495 (unused)
+res_fcb_rc       = $089C =  2204  _BSS    RESOURCE.asm:490 (unused)
+res_fcb_s1       = $089A =  2202  _BSS    RESOURCE.asm:488 (unused)
+res_fcb_s2       = $089B =  2203  _BSS    RESOURCE.asm:489 (unused)
+res_fcb_type     = $0896 =  2198  _BSS    RESOURCE.asm:486
 res_init         = $023F =   575  _TEXT   RESOURCE.asm:29
 res_load         = $0249 =   585  _TEXT   RESOURCE.asm:47 (unused)
 res_locate       = $03C4 =   964  _TEXT   RESOURCE.asm:337 (unused)
 res_open         = $02D0 =   720  _TEXT   RESOURCE.asm:153 (unused)
-res_pointer      = $06C9 =  1737  _BSS    RESOURCE.asm:478
+res_pointer      = $088B =  2187  _BSS    RESOURCE.asm:478
 res_printzt      = $03B5 =   949  _TEXT   RESOURCE.asm:317
-res_sectors      = $06C4 =  1732  _BSS    RESOURCE.asm:466
+res_sectors      = $0886 =  2182  _BSS    RESOURCE.asm:466
 stack_size       = $0020 =    32          KRISYS.asm:31
-str_arg_empty    = $0526 =  1318  _DATA   RESOURCE.asm:441
-str_arg_fail     = $053D =  1341  _DATA   RESOURCE.asm:444
-str_crlf         = $0599 =  1433  _DATA   KRISYS.asm:203
-str_load_a       = $0516 =  1302  _DATA   RESOURCE.asm:434
-str_load_b       = $051F =  1311  _DATA   RESOURCE.asm:437
-str_mem_empty    = $04EE =  1262  _DATA   MEMORY.asm:195
-str_mem_init     = $04C3 =  1219  _DATA   MEMORY.asm:189
-str_mem_init_cnt = $04E8 =  1256  _DATA   MEMORY.asm:192
-str_splash       = $0553 =  1363  _DATA   KRISYS.asm:198
-str_zmm_init     = $0504 =  1284  _DATA   ZMM.asm:184
-tohex            = $04A4 =  1188  _TEXT   KRISYS.asm:173
+str_arg_empty    = $06E8 =  1768  _DATA   RESOURCE.asm:441
+str_arg_fail     = $06FF =  1791  _DATA   RESOURCE.asm:444
+str_crlf         = $075B =  1883  _DATA   KRISYS.asm:203
+str_load_a       = $06D8 =  1752  _DATA   RESOURCE.asm:434
+str_load_b       = $06E1 =  1761  _DATA   RESOURCE.asm:437
+str_mem_empty    = $06B0 =  1712  _DATA   MEMORY.asm:195
+str_mem_init     = $0685 =  1669  _DATA   MEMORY.asm:189
+str_mem_init_cnt = $06AA =  1706  _DATA   MEMORY.asm:192
+str_splash       = $0715 =  1813  _DATA   KRISYS.asm:198
+str_zmm_init     = $06C6 =  1734  _DATA   ZMM.asm:184
+tohex            = $0666 =  1638  _TEXT   KRISYS.asm:173
 trap_a_value     = $6FFF = 28671  _TEXT   KRISYS.asm:89
-trap_continue    = $045A =  1114  _TEXT   TRAP.asm:70
+trap_continue    = $061C =  1564  _TEXT   TRAP.asm:477
 trap_entry       = $042D =  1069  _TEXT   TRAP.asm:19
-trap_f_value     = $6FFE = 28670  _TEXT   KRISYS.asm:90 (unused)
-trap_init        = $0461 =  1121  _TEXT   TRAP.asm:90
-trap_io_ext      = $045A =  1114  _TEXT   TRAP.asm:63
-trap_sp_value    = $06EF =  1775  _BSS    TRAP.asm:108
+trap_f_value     = $6FFE = 28670  _TEXT   KRISYS.asm:90
+trap_init        = $0623 =  1571  _TEXT   TRAP.asm:497
+trap_io_ex_out   = $04D6 =  1238  _TEXT   TRAP.asm:170
+trap_io_ext      = $045A =  1114  _TEXT   TRAP.asm:58
+trap_io_ind      = $056D =  1389  _TEXT   TRAP.asm:308
+trap_io_inx      = $0530 =  1328  _TEXT   TRAP.asm:249
+trap_io_outd     = $05E3 =  1507  _TEXT   TRAP.asm:422
+trap_io_outx     = $05A6 =  1446  _TEXT   TRAP.asm:363
+trap_sp_value    = $08B1 =  2225  _BSS    TRAP.asm:515
 zmm_addr_hi      = $0032 =    50  _TEXT   KRISYS.asm:67 (unused)
 zmm_addr_lo      = $0033 =    51  _TEXT   KRISYS.asm:68 (unused)
 zmm_bnk0         = $0030 =    48  _TEXT   KRISYS.asm:61
 zmm_bnk0_set     = $0227 =   551  _TEXT   ZMM.asm:142 (unused)
-zmm_bnk0_state   = $061E =  1566  _BSS    ZMM.asm:198
+zmm_bnk0_state   = $07E0 =  2016  _BSS    ZMM.asm:198
 zmm_bnk1         = $0031 =    49  _TEXT   KRISYS.asm:62
 zmm_bnk1_set     = $022D =   557  _TEXT   ZMM.asm:152 (unused)
-zmm_bnk1_state   = $061F =  1567  _BSS    ZMM.asm:202
+zmm_bnk1_state   = $07E1 =  2017  _BSS    ZMM.asm:202
 zmm_bnk2         = $0032 =    50  _TEXT   KRISYS.asm:63
 zmm_bnk2_set     = $0233 =   563  _TEXT   ZMM.asm:162 (unused)
-zmm_bnk2_state   = $0620 =  1568  _BSS    ZMM.asm:206
+zmm_bnk2_state   = $07E2 =  2018  _BSS    ZMM.asm:206
 zmm_bnk3         = $0033 =    51  _TEXT   KRISYS.asm:64
 zmm_bnk3_set     = $0239 =   569  _TEXT   ZMM.asm:172
-zmm_bnk3_state   = $0621 =  1569  _BSS    ZMM.asm:210
+zmm_bnk3_state   = $07E3 =  2019  _BSS    ZMM.asm:210
 zmm_capt_res     = $007F =   127  _TEXT   KRISYS.asm:76 (unused)
 zmm_capt_set     = $0070 =   112  _TEXT   KRISYS.asm:75 (unused)
 zmm_capture      = $7000 = 28672  _TEXT   KRISYS.asm:71
 zmm_ctrl         = $0034 =    52  _TEXT   KRISYS.asm:65
 zmm_ctrl_set     = $01C9 =   457  _TEXT   ZMM.asm:44
-zmm_ctrl_state   = $061D =  1565  _BSS    ZMM.asm:194
+zmm_ctrl_state   = $07DF =  2015  _BSS    ZMM.asm:194
 zmm_init         = $01AC =   428  _TEXT   ZMM.asm:22
 zmm_irq_inter    = $01FB =   507  _TEXT   ZMM.asm:97 (unused)
 zmm_irq_normal   = $0206 =   518  _TEXT   ZMM.asm:108 (unused)
@@ -1467,5 +1879,5 @@ zmm_top          = $C000 = 49152  _TEXT   KRISYS.asm:73
 zmm_trap         = $0037 =    55  _TEXT   KRISYS.asm:69 (unused)
 
 
-total time: 0.4641 sec.
+total time: 0.5357 sec.
 no errors
