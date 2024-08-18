@@ -84,6 +84,11 @@ nabu_nctl	equ	0x00	; NABU Control Register
 nabu_ay_data	equ	0x40	; AY-3-8910 Data Port
 nabu_at_latch	equ	0x41	; AY-3-8910 Latch Port
 
+; Stack / Trap Management
+kri_stack	equ	zmm_capture
+trap_a_value	equ	kri_stack-1
+trap_f_value	equ	kri_stack-2
+
 ; -------------------------------------
 ; ******** Additional Includes ********
 ; -------------------------------------
@@ -103,7 +108,7 @@ nabu_at_latch	equ	0x41	; AY-3-8910 Latch Port
 kri_start:	
 	; Set up stack
 	di
-	ld	sp,zmm_capture
+	ld	sp,kri_stack
 	ld	hl,cpm_exit
 	push	hl
 	

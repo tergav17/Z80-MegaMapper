@@ -19,7 +19,7 @@
 trap_entry:
 	; Save value of SP
 	ld	(trap_sp_value),sp
-	ld	sp,zmm_capture
+	ld	sp,kri_stack
 	
 	; Save value of AF
 	push	af
@@ -35,8 +35,36 @@ trap_entry:
 	jp	p,trap_continue
 	
 	; OK, a trap did occur.
-	; Lets figure out if it's an IN or OUT
+	; Are we doing "classic" I/O or extended I/O?
+	cp	0b11101000
+	jp	c,trap_io_ext
 	
+	; In or out?
+	cp	0b11101100
+	jp	c,0$
+	
+	; In it is
+	call	in_handle
+	ld	(trap_a_value),a
+	jp	trap_continue
+	
+	; Out it is
+0$:	ld	a,(trap_a_value)
+	call	out_handle
+	jp	trap_continue
+	
+	
+	
+	
+	
+	
+	
+; It's an extended I/O instruction
+trap_io_ext:
+	
+	
+	
+	; If the number is even, then it will ALWAYS be an out instruction
 	
 ; Continue execution
 trap_continue:
