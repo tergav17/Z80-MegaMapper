@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "KSG1000.asm"
-              	; date: 2024-08-18 22:13:58
+              	; date: 2024-08-18 22:44:12
               	; --------------------------------------
 
 
@@ -2454,5 +2454,5 @@ zmm_trap         = $0037 =    55  _TEXT   KRISYS.asm:69
 zmm_vm_start     = $01C9 =   457  _TEXT   ZMM.asm:44
 
 
-total time: 0.0182 sec.
+total time: 0.6674 sec.
 no errors
