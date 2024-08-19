@@ -30,12 +30,16 @@ trap_entry:
 	; Grab the value of the ISR register
 	in	a,(zmm_isr)
 	
-	; Do we actually need to handle a trap?
+	; Do we actually need to handle an I/O trap?
 	or	a
 	jp	p,trap_continue
 	
+	; Yep, reset trap flag
+	out	(zmm_trap),a
+	
 	; OK, a trap did occur.
 	; Are we doing "classic" I/O or extended I/O?
+trap_io:	
 	cp	0b11101000
 	jp	c,trap_io_ext
 	

@@ -82,7 +82,9 @@ nmi_vector	equ	nmi_address+1
 ; NABU Specific Stuff
 nabu_nctl	equ	0x00	; NABU Control Register
 nabu_ay_data	equ	0x40	; AY-3-8910 Data Port
-nabu_at_latch	equ	0x41	; AY-3-8910 Latch Port
+nabu_ay_latch	equ	0x41	; AY-3-8910 Latch Port
+nabu_vdp_data	equ	0xA0	; VDP Data Port
+nabu_vdp_addr	equ	0xA1	; VDP Address Port
 
 ; Stack / Trap Management
 kri_stack	equ	zmm_capture
@@ -97,6 +99,7 @@ trap_f_value	equ	kri_stack-2
 #include "ZMM.asm"
 #include "RESOURCE.asm"
 #include "TRAP.asm"
+#include "IRQ.asm"
 
 ; --------------------------------
 ; ******** KRISYS Startup ********
@@ -118,6 +121,7 @@ kri_start:
 	call	bdos
 	
 	; Initalize subcomponents
+	call	irq_init
 	call	zmm_init
 	call	trap_init
 	call	mem_map_init

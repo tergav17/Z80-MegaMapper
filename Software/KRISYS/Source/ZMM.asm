@@ -36,6 +36,45 @@ zmm_init:
 	ld	de,str_zmm_init
 	jp	cpm_print
 	
+; Start execution of the virtual machine at a specific location
+; HL = Address to start execution at
+; 
+; Does not return
+; Uses: All registers zeroed
+zmm_vm_start:
+	ld	sp,0xFFFF-1
+	ld	a,h
+	ld	((zmm_capture + 0x1000) - 2),a
+	ld	a,l
+	ld	((zmm_capture + 0x1000) - 1),a
+	
+	; Reset I/O trap flag just in case
+	out	(zmm_trap),a
+	
+	; Zero everything
+	xor	a
+	ld	b,a
+	ld	c,a
+	ld 	d,a
+	ld	e,a
+	ld	h,a
+	ld	l,a
+	exx
+	ex	af,af'
+	xor	a
+	ld	b,a
+	ld	c,a
+	ld 	d,a
+	ld	e,a
+	ld	h,a
+	ld	l,a
+	
+	ld	ix,0
+	ld	iy,0
+	
+	; Enter virtual machine
+	retn
+	
 ; Set the ZMM control register to the recorded state
 ; (zmm_ctrl_state) = New value of ZMM control register
 ;
@@ -173,6 +212,79 @@ zmm_bnk3_set:
 	ld	(zmm_bnk3_state),a
 	out	(zmm_bnk3),a
 	ret
+	
+	
+; Write protect bank 0
+;
+; Returns nothing
+; Uses: AF
+zmm_bnk0_wp:
+	ld	a,(zmm_bnk0_state)
+	or	0b10000000
+	jp 	zmm_bnk0_set
+	
+; Write enable bank 0
+;
+; Returns nothing
+; Uses: AF
+zmm_bnk0_we:
+	ld	a,(zmm_bnk0_state)
+	and	~0b10000000
+	jp 	zmm_bnk0_set
+	
+; Write protect bank 1
+;
+; Returns nothing
+; Uses: AF
+zmm_bnk1_wp:
+	ld	a,(zmm_bnk1_state)
+	or	0b10000000
+	jp 	zmm_bnk1_set
+	
+; Write enable bank 1
+;
+; Returns nothing
+; Uses: AF
+zmm_bnk1_we:
+	ld	a,(zmm_bnk1_state)
+	and	~0b10000000
+	jp 	zmm_bnk1_set
+	
+; Write protect bank 2
+;
+; Returns nothing
+; Uses: AF
+zmm_bnk2_wp:
+	ld	a,(zmm_bnk2_state)
+	or	0b10000000
+	jp 	zmm_bnk2_set
+	
+; Write enable bank 2
+;
+; Returns nothing
+; Uses: AF
+zmm_bnk2_we:
+	ld	a,(zmm_bnk2_state)
+	and	~0b10000000
+	jp 	zmm_bnk2_set
+	
+; Write protect bank 3
+;
+; Returns nothing
+; Uses: AF
+zmm_bnk3_wp:
+	ld	a,(zmm_bnk3_state)
+	or	0b10000000
+	jp 	zmm_bnk3_set
+	
+; Write enable bank 3
+;
+; Returns nothing
+; Uses: AF
+zmm_bnk3_we:
+	ld	a,(zmm_bnk3_state)
+	and	~0b10000000
+	jp 	zmm_bnk3_set
 	
 ; -------------------------
 ; ******** Strings ********

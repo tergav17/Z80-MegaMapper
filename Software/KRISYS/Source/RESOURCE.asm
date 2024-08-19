@@ -71,7 +71,8 @@ res_load:
 	jp	zmm_ctrl_set
 	
 	; Allocate a new bank
-0$:	call	mem_alloc
+0$:	ld	d,1
+	call	mem_alloc
 	ld	hl,(res_bankmap)
 	ld	(hl),a
 	inc	hl
@@ -144,6 +145,31 @@ res_load:
 
 	ret
 	
+; Throws an error a missing resource
+; Resource name will be last attempted to locate
+;
+; Does not return
+; Uses: N/A
+res_missing:
+	call	zmm_set_real
+	
+	; Print error message
+	ld	c,bdos_print
+	ld	de,str_missing
+	call	bdos
+	
+	; Print resource name
+	ld	de,(res_current)
+	call	res_printzt
+	
+	; CRLF
+	ld	c,bdos_print
+	ld	de,str_crlf
+	call	bdos
+	
+	; Exit
+	jp	cpm_exit
+	
 ; Opens a file based on the resource argument
 ; If the file cannot be opened, an error will be thrown
 ; (res_argument) = File to open
@@ -170,10 +196,7 @@ res_open:
 	call	bdos
 	
 	; Print resource name
-	ld	hl,res_current
-	ld	e,(hl)
-	inc	hl
-	ld	d,(hl)
+	ld	de,(res_current)
 	call	res_printzt
 	
 	; Next string
@@ -444,6 +467,9 @@ str_arg_empty:
 str_arg_fail:
 	defb	'FAILED TO OPEN FILE',0x0A,0x0D,'$'
 	
+str_missing:
+	defb	'MISSING RESOURCE: $'
+	
 ; ---------------------------
 ; ******** Variables ********
 ; ---------------------------
@@ -456,7 +482,7 @@ res_argument:
 	
 ; Current resource being accessed
 res_current:
-	defs	arg_size+1
+	defs	2
 	
 ; Resource buffer
 res_buffer:
