@@ -43,6 +43,17 @@ zmm_init:
 ; Uses: All registers zeroed
 zmm_vm_start:
 	ld	sp,0xFFFF-1
+	
+	; Completely empty out capture zone
+	push	hl
+	ld	hl,zmm_capture
+	ld	de,zmm_capture+1
+	ld	bc,0x1000-1
+	xor	a
+	ld	(hl),a
+	ldir
+	pop	hl
+	
 	ld	a,h
 	ld	((zmm_capture + 0x1000) - 2),a
 	ld	a,l

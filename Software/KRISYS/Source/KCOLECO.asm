@@ -16,6 +16,8 @@
 ; Start of ColecoVision core
 core_start:
 	jp	cpm_exit
+	
+debug_point:
 
 
 ; -----------------------------------

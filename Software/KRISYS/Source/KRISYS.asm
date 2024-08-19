@@ -162,6 +162,7 @@ cpm_print:
 ; Does not return
 ; Uses: N/A
 cpm_exit:
+	call	zmm_set_real
 	ld	c,bdos_exit
 	call	bdos	
 	

@@ -122,7 +122,7 @@ mem_alloc:
 	ld	bc,alloc_bank_map
 	or	a
 	sbc	hl,bc
-	ld	l,a
+	ld	a,l
 	ret
 	
 ; Frees a bank of memory

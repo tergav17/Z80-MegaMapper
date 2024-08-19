@@ -44,7 +44,7 @@ core_start:
 	
 	; Do output map
 	call	zmm_prgm_out
-	ld	hl,io_map_input
+	ld	hl,io_map_output
 	ld	de,zmm_map
 	ld	bc,256
 	ldir
@@ -71,12 +71,38 @@ core_start:
 	call	zmm_bnk1_set
 	call	zmm_bnk1_wp
 	
+	; Enable VDP interrupt
+	; call	irq_vdp_on
+	
 	; Start up VM
 	ld	de,str_vm_start
 	call	cpm_print
 
+	call	zmm_set_virt
 	ld	hl,0
-	call	zmm_vm_start
+	jp	zmm_vm_start
+	
+	
+	ld	a,(zmm_bnk1_state)
+	out	(zmm_bnk3),a
+	ld	a,(zmm_top+0)
+	call	debug_point
+	ld	a,(zmm_top+1)
+	call	debug_point
+	ld	a,(zmm_top+2)
+	call	debug_point
+	ld	a,(zmm_top+3)
+	call	debug_point
+	
+	jp	cpm_exit
+	
+	
+; A = Value to print
+debug_point:
+	call	tohex
+	ld	(str_debug_val),de
+	ld	de,str_debug
+	jp	cpm_print
 	
 	
 ; -----------------------------------
@@ -132,6 +158,12 @@ str_ram_alloc:
 ; Bootup strings
 str_vm_start:
 	defb	'STARTING VM NOW',0x0A,0x0D,'$'
+	
+; Debug string
+str_debug:
+	defb 	'A = '
+str_debug_val:
+	defb	'XX',0x0A,0x0D,'$'
 
 
 ; ----------------------

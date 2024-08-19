@@ -60,6 +60,7 @@ trap_io:
 
 ; It's an extended I/O instruction
 trap_io_ext:
+
 	; Input or output?
 	rrca
 	jp	c,trap_io_ex_out
@@ -172,6 +173,7 @@ trap_io_ext:
 	
 ; Extended output instruction
 trap_io_ex_out:
+
 	; OUTI-class?
 	rrca
 	jp	c,trap_io_outx
@@ -365,6 +367,7 @@ trap_io_ind:
 	; OUTX-class instructions
 	; The CPU should handle the differences between OUTX and OTXR
 trap_io_outx:
+
 	; Left or right column?
 	rrca
 	jp	c,trap_io_outd
@@ -420,6 +423,7 @@ trap_io_outx:
 	
 	; Restore and continue
 	pop	hl
+	
 	jp	trap_continue
 	
 	; Right column, it's 'D' class
