@@ -8,15 +8,16 @@
 ;* 
 ;**************************************************************
 
-nabu_vdp_data	equ	0xA0	; VDP Data Port
-nabu_vdp_addr	equ	0xA1	; VDP Address Port
+nabu_vdp_data	equ	0xBE	; VDP Data Port
+nabu_vdp_addr	equ	0xBF	; VDP Address Port
 
 
 ; Program start
-	org	0x0100
+	org	0x0000
 	
 	; Print "hello" splash
 start:	di
+	ld	sp,0xC000+0x20
 
 	; Set up write address
 	ld	bc,0x4800

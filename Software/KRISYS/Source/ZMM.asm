@@ -54,9 +54,9 @@ zmm_vm_start:
 	ldir
 	pop	hl
 	
-	ld	a,h
-	ld	((zmm_capture + 0x1000) - 2),a
 	ld	a,l
+	ld	((zmm_capture + 0x1000) - 2),a
+	ld	a,h
 	ld	((zmm_capture + 0x1000) - 1),a
 	
 	; Reset I/O trap flag just in case

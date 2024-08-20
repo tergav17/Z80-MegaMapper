@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "KCOLECO.asm"
-              	; date: 2024-08-18 22:44:12
+              	; date: 2024-08-19 21:34:14
               	; --------------------------------------
 
 
@@ -394,9 +394,9 @@ C000:         	zmm_top		equ	0xC000
 01D8: EDB0    		ldir
 01DA: E1      		pop	hl
               		
-01DB: 7C      		ld	a,h
+01DB: 7D      		ld	a,l
 01DC: 32FE7F  		ld	((zmm_capture + 0x1000) - 2),a
-01DF: 7D      		ld	a,l
+01DF: 7C      		ld	a,h
 01E0: 32FF7F  		ld	((zmm_capture + 0x1000) - 1),a
               		
               		; Reset I/O trap flag just in case
@@ -2287,5 +2287,5 @@ zmm_trap         = $0037 =    55  _TEXT   KRISYS.asm:69
 zmm_vm_start     = $01C9 =   457  _TEXT   ZMM.asm:44 (unused)
 
 
-total time: 0.7030 sec.
+total time: 0.1001 sec.
 no errors

@@ -172,7 +172,7 @@ str_debug_val:
 	
 .area	_DATA
 
-TRAP	equ	zmm_trap	; Trap Vector
+TRAP	equ	0xF0	; Trap Vector
 _VDD	equ	nabu_vdp_data	; VDP Data
 _VDA	equ	nabu_vdp_addr	; VDP Address
 
