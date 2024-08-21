@@ -72,7 +72,7 @@ wire io_direction;
 // Define control register bits
 wire virtual_enable = ctrl_register[0];
 wire set_trans_direction = ctrl_register[1];
-wire irq_intercept = ctrl_register[1];
+wire irq_intercept = ctrl_register[2];
 wire force_irq = ctrl_register[3];
 
 // We should capture the current "real" address everytime there is an I/O violation

@@ -67,23 +67,23 @@ always @(negedge m1_n)
 begin
    // If the capture latch has been enabled for a M1 cycle, disable it
    if (capture_latch_r)
-      capture_latch_r = 0;
+      capture_latch_r <= 0;
 
    if (!trap_state_r) begin
       // Trap must always be set when virtualization is off
       if (!virtual_enabled)
-         trap_state_r = 1;
+         trap_state_r <= 1;
       
       // If there is a trap pending, update the state
       if (trap_pending && new_isr) begin
-         trap_state_r = 1;
-         capture_latch_r = 1;
+         trap_state_r <= 1;
+         capture_latch_r <= 1;
       end 
    end 
    else begin
       // Trap can be ended by executing a jump instruction
       if (last_isr_untrap && virtual_enabled)
-         trap_state_r = 0;
+         trap_state_r <= 0;
    end
 end
 
@@ -91,7 +91,7 @@ always @(posedge m1_n)
 begin
    // Interrupt gets updated on the positive edge of every M1 cycle
    // May slow down interrupt response by an instruction or two, but gets rid of a lot of edge cases
-   irq_sync_r = irq_sys_n;
+   irq_sync_r <= irq_sys_n;
 end
 
 endmodule

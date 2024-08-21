@@ -42,9 +42,9 @@ assign ctrl_out = ctrl_reg;
 always @(posedge wr_n or negedge reset_n)
 begin
    if (!reset_n)
-      ctrl_reg = 4'b0000;
+      ctrl_reg <= 4'b0000;
    else if (write_ctrl_en)
-      ctrl_reg = data[3:0];
+      ctrl_reg <= data[3:0];
 end
 
 // Logic for reading the output register
@@ -54,7 +54,7 @@ assign data = (!rd_n && read_isr_en) ? {io_violation_occured, isr_reg[6:2], isr_
 always @(posedge m1_n)
 begin
    if (record_isr_en)
-      isr_reg = {data[7:3], data[1:0]};
+      isr_reg <= {data[7:3], data[1:0]};
 end
 
 endmodule
