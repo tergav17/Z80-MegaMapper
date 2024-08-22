@@ -100,6 +100,7 @@ trap_f_value	equ	kri_stack-2
 #include "RESOURCE.asm"
 #include "TRAP.asm"
 #include "IRQ.asm"
+#include "DEBUG.asm"
 
 ; --------------------------------
 ; ******** KRISYS Startup ********

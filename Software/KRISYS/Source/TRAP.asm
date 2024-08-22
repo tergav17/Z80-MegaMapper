@@ -34,9 +34,6 @@ trap_entry:
 	or	a
 	jp	p,trap_continue
 	
-	; Yep, reset trap flag
-	out	(zmm_trap),a
-	
 	; OK, a trap did occur.
 	; Are we doing "classic" I/O or extended I/O?
 trap_io:	
@@ -165,11 +162,8 @@ trap_io_ext:
 91$:	or	a
 	ld	a,(trap_a_value)
 	
-	; Restore old SP
-	ld	sp,(trap_sp_value)
-	
-	; Go back to the virtual machine
-	retn
+	; Do the retn
+	jp	trap_restore
 	
 ; Extended output instruction
 trap_io_ex_out:
@@ -485,6 +479,15 @@ trap_io_outd:
 trap_continue:
 	; Restore AF
 	pop	af
+	
+	; Restore stack and return
+	; Maybe invoke the debugger as well
+trap_restore:
+	
+	; Reset trap state
+trap_res_flag:
+	out	(zmm_trap),a
+	nop
 	
 	; Restore old SP
 	ld	sp,(trap_sp_value)

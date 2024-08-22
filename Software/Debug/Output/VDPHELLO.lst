@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "VDPHELLO.asm"
-              	; date: 2024-08-19 00:06:08
+              	; date: 2024-08-21 23:49:49
               	; --------------------------------------
 
 
@@ -132,5 +132,5 @@ tms_addr      = $001F =    31          VDPHELLO.asm:43
 tms_hello     = $0028 =    40          VDPHELLO.asm:53
 
 
-total time: 0.0029 sec.
+total time: 0.0352 sec.
 no errors
