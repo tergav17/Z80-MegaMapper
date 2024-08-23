@@ -51,6 +51,7 @@ bdos_exit	equ	0x00
 bdos_con_in	equ	0x01
 bdos_con_out	equ	0x02
 bdos_print	equ	0x09
+bdos_input	equ	0x0A
 bdos_open	equ	0x0F
 bdos_read	equ	0x14
 bios_set_dma	equ	0x1A
@@ -151,6 +152,28 @@ cpm_print:
 	
 	; Do BDOS call
 	ld	c,bdos_print
+	call	bdos
+	
+	; Restore register
+	pop	af
+	ld	(zmm_ctrl_state),a
+	jp	zmm_ctrl_set
+	
+; Gets a line of input from the console
+; DE = Address of result
+;
+; Returns nothing
+; Uses: All
+cpm_input:
+	; Save control register state
+	ld	a,(zmm_ctrl_state)
+	push	af
+	
+	; Go to real mode
+	call zmm_set_real
+	
+	; Do BDOS call
+	ld	c,bdos_input
 	call	bdos
 	
 	; Restore register

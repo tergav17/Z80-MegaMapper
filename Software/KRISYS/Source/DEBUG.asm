@@ -36,8 +36,31 @@ debug_handle:
 	ld	sp,(debug_temp)
 	
 	; Debugger stuff starts here
-	
-	
+	; Populate register dump string
+	ld	bc,debug_state
+	ld	hl,str_rdump_af
+	call	debug_rtohex
+	ld	hl,str_rdump_bc
+	call	debug_rtohex
+	ld	hl,str_rdump_de
+	call	debug_rtohex
+	ld	hl,str_rdump_hl
+	call	debug_rtohex
+	ld	hl,str_rdump_aaf
+	call	debug_rtohex
+	ld	hl,str_rdump_abc
+	call	debug_rtohex
+	ld	hl,str_rdump_ade
+	call	debug_rtohex
+	ld	hl,str_rdump_ahl
+	call	debug_rtohex
+	ld	hl,str_rdump_ix
+	call	debug_rtohex
+	ld	hl,str_rdump_iy
+	call	debug_rtohex
+	ld	bc,trap_sp_value+2
+	ld	hl,str_rdump_sp
+	call	debug_rtohex
 	
 	
 ; Go back to the virutal machine
@@ -71,6 +94,32 @@ debug_continue:
 ; ----------------------------
 
 .area	_TEXT
+
+; Converts a register to hexadecimal
+; BC = Address of register value
+; HL = Address of hex string
+;
+; Returns BC=BC=2
+; Uses: AF, BC, DE, HL
+debug_rtohex:
+	dec	bc
+	ld	a,(bc)
+	push	bc
+	call	tohex
+	pop	bc
+	ld	(hl),e
+	inc	hl
+	ld	(hl),d
+	inc	hl
+	dec	bc
+	ld	a,(bc)
+	push	bc
+	call 	tohex
+	pop	bc
+	ld	(hl),e
+	inc	hl
+	ld	(hl),d
+	ret
 
 ; Bind the debugger to the trap handler
 ; Any trap can now be used to invoke the machine language monitor
@@ -109,7 +158,53 @@ debug_unbind:
 	
 	
 	
+; -------------------------
+; ******** Strings ********
+; -------------------------
+
+.area	_DATA
+
+; Register dump string
+str_rdump:
+	defb	0x1E,0x17
+	defb	'PC: '
+str_rdump_pc:
+	defb	'XXXX, SP: '
+str_rdump_sp:
+	defb	'XXXX',0x0A,0x0D
+	defb	'FLAGS: '
+str_rdump_flag:
+	defb	'--------, EI: '
+str_rdump_ei:
+	defb	'-, I/O: '
+str_rdump_io:
+	defb	'-',0x0A,0x0D
 	
+	defb	'R= AF: '
+str_rdump_af:
+	defb	'XXXX BC: '
+str_rdump_bc:
+	defb	'XXXX DE: '
+str_rdump_de:
+	defb	'XXXX HL: '
+str_rdump_hl:
+	defb	'XXXX',0x0A,0x0D
+	
+	defb	'X= AF: '
+str_rdump_aaf:
+	defb	'XXXX BC: '
+str_rdump_abc:
+	defb	'XXXX DE: '
+str_rdump_ade:
+	defb	'XXXX HL: '
+str_rdump_ahl:
+	defb	'XXXX',0x0A,0x0D
+	
+	defb	'E= IX: '
+str_rdump_ix:
+	defb	'XXXX IY: '
+str_rdump_iy:
+	defb	'XXXX',0x0A,0x0D,'$'
 	
 	
 ; ---------------------------
