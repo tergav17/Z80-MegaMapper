@@ -62,6 +62,32 @@ debug_handle:
 	ld	hl,str_rdump_sp
 	call	debug_rtohex
 	
+		
+	; Extract PC from capture area
+	ld	hl,(trap_sp_value)
+	ld	a,h
+	and	zmm_capt_res
+	or	zmm_capt_set
+	ld	h,a
+	ld	a,(hl)
+	call	tohex
+	ld	(str_rdump_pc+2),de
+	inc	hl
+	ld	a,h
+	and	zmm_capt_res
+	or	zmm_capt_set
+	ld	h,a
+	ld	a,(hl)
+	call	tohex
+	ld	(str_rdump_pc),de
+	
+	; Prompt the user for commands
+debug_prompt:
+	ld	de,str_prompt
+	call	cpm_print
+	ld	de,input_buff
+	call	cpm_input
+	
 	
 ; Go back to the virutal machine
 debug_continue:
@@ -206,6 +232,14 @@ str_rdump_ix:
 str_rdump_iy:
 	defb	'XXXX',0x0A,0x0D,'$'
 	
+; Debug prompt
+str_prompt
+	defb	0x0A,0x0D,'*','$'
+	
+; Input buffer
+input_buff:
+	defb	40
+	defs	41
 	
 ; ---------------------------
 ; ******** Variables ********
