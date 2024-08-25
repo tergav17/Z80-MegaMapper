@@ -72,7 +72,10 @@ core_start:
 	call	zmm_bnk1_wp
 	
 	; Enable VDP interrupt
-	; call	irq_vdp_on
+	call	irq_vdp_on
+	
+	; Bind debugger
+	call	debug_bind
 	
 	; Start up VM
 	ld	de,str_vm_start
@@ -172,7 +175,7 @@ str_debug_val:
 	
 .area	_DATA
 
-TRAP	equ	0xF0	; Trap Vector
+TRAP	equ	zmm_trap	; Trap Vector
 _VDD	equ	nabu_vdp_data	; VDP Data
 _VDA	equ	nabu_vdp_addr	; VDP Address
 

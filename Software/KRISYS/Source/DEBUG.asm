@@ -81,6 +81,10 @@ debug_handle:
 	call	tohex
 	ld	(str_rdump_pc),de
 	
+	; Print
+	ld	de,str_rdump
+	call	cpm_print
+	
 	; Prompt the user for commands
 debug_prompt:
 	ld	de,str_prompt
@@ -200,9 +204,9 @@ str_rdump_sp:
 	defb	'XXXX',0x0A,0x0D
 	defb	'FLAGS: '
 str_rdump_flag:
-	defb	'--------, EI: '
+	defb	'-------- EI: '
 str_rdump_ei:
-	defb	'-, I/O: '
+	defb	'- I/O: '
 str_rdump_io:
 	defb	'-',0x0A,0x0D
 	
