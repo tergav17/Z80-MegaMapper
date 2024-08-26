@@ -63,6 +63,12 @@ core_start:
 	call	mem_alloc
 	call	zmm_bnk3_set
 	
+	; TODO: remove me
+	ld	a,(zmm_bnk0_state)
+	call	zmm_bnk3_set
+	call 	irq_hcca_o_on
+	call	zmm_irq_inter
+	
 	; Mount ROM
 	ld	a,(bm_rom)
 	call	zmm_bnk0_set
@@ -82,7 +88,7 @@ core_start:
 	call	cpm_print
 
 	call	zmm_set_virt
-	ld	hl,0
+	ld	hl,0xC000
 	jp	zmm_vm_start
 	
 	

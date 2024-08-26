@@ -329,7 +329,7 @@ test5:	ld	c,b_print
 	call	bdos
 	
 	; Test #6
-tes6:	ld	c,b_print
+test6:	ld	c,b_print
 	ld	de,s_test6
 	call	bdos
 	
@@ -337,9 +337,9 @@ tes6:	ld	c,b_print
 	ld	a,0b00000001
 	out	(zm_ctrl),a
 	
-	; Remap 0xF9 of OUT to zm_trap
+	; Remap 0x19 of OUT to zm_trap
 	ld	a,zm_trap
-	ld	(zm_map+0xF9),a
+	ld	(zm_map+0x19),a
 	
 	; Punch in entry address
 	ld	de,zm_top+4
@@ -360,12 +360,24 @@ tes6:	ld	c,b_print
 1$:	ld	a,0b00000000
 	out	(zm_ctrl),a
 	
-	; Check address
+	; Check return address
+	ld	hl,0
+	add	hl,sp
+	ld	a,h
+	or	zm_sset
+	and	zm_sres
+	ld	h,a
+	ld	a,(hl)
+	call	tohex
+	ld	(s_nfail),de
+	jp	fail
+	
+	; Check I/O address
 	in	a,(zm_a_lo)
 	ld	b,a
 	call	tohex
 	ld	(s_nfail),de
-	ld	a,0xF9
+	ld	a,0x19
 	cp	b
 	jp	nz,fail
 	
@@ -491,7 +503,7 @@ snip0_a:nop
 	ld	b,3
 
 	; Blink light
-0$:	ld	a,0x11
+blinken:ld	a,0x11
 	out	(nb_nctl),a
 	
 	ld	bc,0
@@ -511,7 +523,7 @@ snip0_a:nop
 	djnz	2$
 	dec	c
 	jr	nz,2$
-	jr	0$
+	jr	blinken
 	
 	; Overwrite the first 48KB of memory, and then trap
 snip0_b:ld	hl,0
@@ -521,10 +533,11 @@ snip0_b:ld	hl,0
 	ldir
 	
 	out	(zm_trap),a
-0$:	jr	0$
+	jr	blinken
 
 snip0_c:ld	b,0x69
-	ld	c,0xF9
+	ld	c,0x19
+	ld	a,0xF1
 	out	(c),a
 	
 0$:	jr	0$

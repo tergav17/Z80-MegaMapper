@@ -32,7 +32,7 @@ zmm_init:
 	call	zmm_set_virt
 	call	zmm_set_real
 	
-	; Tell the user that the ZMM is read
+	; Tell the user that the ZMM is ready
 	ld	de,str_zmm_init
 	jp	cpm_print
 	
@@ -42,7 +42,7 @@ zmm_init:
 ; Does not return
 ; Uses: All registers zeroed
 zmm_vm_start:
-	ld	sp,0xFFFF-1
+	ld	sp,0x0000
 	
 	; Completely empty out capture zone
 	push	hl
@@ -55,15 +55,15 @@ zmm_vm_start:
 	pop	hl
 	
 	ld	a,l
-	ld	((zmm_capture + 0x1000) - 2),a
+	ld	(zmm_capture),a
 	ld	a,h
-	ld	((zmm_capture + 0x1000) - 1),a
+	ld	(zmm_capture + 1),a
 	
 	; Reset I/O trap flag just in case
 	out	(zmm_trap),a
 	
 	; Zero everything
-	xor	a
+	ld	a,1
 	ld	b,a
 	ld	c,a
 	ld 	d,a
@@ -72,7 +72,7 @@ zmm_vm_start:
 	ld	l,a
 	exx
 	ex	af,af'
-	xor	a
+	ld	a,1
 	ld	b,a
 	ld	c,a
 	ld 	d,a
@@ -84,6 +84,7 @@ zmm_vm_start:
 	ld	iy,0
 	
 	; Enter virtual machine
+	nop
 	retn
 	
 ; Set the ZMM control register to the recorded state

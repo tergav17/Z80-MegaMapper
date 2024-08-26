@@ -135,3 +135,51 @@ irq_keyb_off:
 	out	(nabu_ay_data),a
 	
 	ret
+	
+; Turns on the HCCA output
+;
+; Returns nothing
+; Uses: AF
+irq_hcca_o_on:
+	; Set up the AY-3-8910 I/O
+	; Make sure to only change the two most significant bits
+	ld	a,7		; AY register = 7
+	out	(nabu_ay_latch),a
+	in	a,(nabu_ay_data)
+	and	0x3F
+	or	0x40
+	out	(nabu_ay_data),a
+
+
+	; Mask on interrupt
+	ld	a,14		; AY register = 14	
+	out	(nabu_ay_latch),a
+	in	a,(nabu_ay_data)
+	or	0b01000000
+	out	(nabu_ay_data),a
+	
+	ret
+	
+; Turns off the HCCA input
+;
+; Returns nothing
+; Uses: AF
+irq_hcca_o_off:
+	; Set up the AY-3-8910 I/O
+	; Make sure to only change the two most significant bits
+	ld	a,7		; AY register = 7
+	out	(nabu_ay_latch),a
+	in	a,(nabu_ay_data)
+	and	0x3F
+	or	0x40
+	out	(nabu_ay_data),a
+
+
+	; Mask off interrupt
+	ld	a,14		; AY register = 14	
+	out	(nabu_ay_latch),a
+	in	a,(nabu_ay_data)
+	and	~0b01000000
+	out	(nabu_ay_data),a
+	
+	ret

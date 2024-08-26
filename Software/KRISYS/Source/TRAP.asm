@@ -152,17 +152,14 @@ trap_io_ext:
 	scf
 	ld	a,(trap_a_value)
 	
-	; Restore old SP
-	ld	sp,(trap_sp_value)
-	
-	; Go back to the virtual machine
-	retn
+	; Do trap restore
+	jp	trap_restore
 	
 	; Update flags and reset carry flag
 91$:	or	a
 	ld	a,(trap_a_value)
 	
-	; Do the retn
+	; Do trap restore
 	jp	trap_restore
 	
 ; Extended output instruction
@@ -486,13 +483,16 @@ trap_restore:
 	
 	; Reset trap state
 trap_res_flag:
-	out	(zmm_trap),a
 	nop
+	nop
+	nop
+	out	(zmm_trap),a
 	
 	; Restore old SP
 	ld	sp,(trap_sp_value)
 	
 	; Go back to the virtual machine
+	nop
 	retn
 	
 ; ----------------------------

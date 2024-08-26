@@ -13,12 +13,19 @@ nabu_vdp_addr	equ	0xBF	; VDP Address Port
 
 
 ; Program start
-	org	0x0000
+	org	0xC000
 	
 	; Print "hello" message
 start:	di
+	ld	b,0x69
 	out	(0xFF),a
-	ld	sp,0xC000
+	inc	a
+	inc	b
+	inc	c
+	inc	d
+	inc	h
+	inc	l
+	ld	sp,0xB004
 
 	; Set up write address
 	ld	bc,0x4800
