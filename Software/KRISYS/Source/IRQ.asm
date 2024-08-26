@@ -183,3 +183,57 @@ irq_hcca_o_off:
 	out	(nabu_ay_data),a
 	
 	ret
+	
+; Save the current interrupt state
+;
+; Returns nothing
+; Uses: AF
+irq_save:
+	; Set up the AY-3-8910 I/O
+	; Make sure to only change the two most significant bits
+	ld	a,7		; AY register = 7
+	out	(nabu_ay_latch),a
+	in	a,(nabu_ay_data)
+	and	0x3F
+	or	0x40
+	out	(nabu_ay_data),a
+
+
+	; Mask off interrupt
+	ld	a,14		; AY register = 14	
+	out	(nabu_ay_latch),a
+	in	a,(nabu_ay_data)
+	ld	(irq_mask_state),a
+	ret
+	
+; Save the previous interrupt state
+;
+; Returns nothing
+; Uses: AF
+irq_restore:
+	; Set up the AY-3-8910 I/O
+	; Make sure to only change the two most significant bits
+	ld	a,7		; AY register = 7
+	out	(nabu_ay_latch),a
+	in	a,(nabu_ay_data)
+	and	0x3F
+	or	0x40
+	out	(nabu_ay_data),a
+
+
+	; Mask off interrupt
+	ld	a,14		; AY register = 14	
+	out	(nabu_ay_latch),a
+	ld	a,(irq_mask_state)
+	out	(nabu_ay_data),a
+	ret
+	
+; ---------------------------
+; ******** Variables ********
+; ---------------------------
+
+.area	_BSS
+
+; Value of untrapped SP value
+irq_mask_state:
+	defs	1

@@ -46,38 +46,45 @@ assign io_direction = io_direction_r;
 always @(posedge m1_n)
 begin
 
-   // If the CPU is doing an IN or OUT instruction, lets try to find what direction it's going
-   // We don't care what this value is if we aren't doing an I/O instruction
-   // 0 = OUT
-   // 1 = IN
-   if (data[7:4] == 4'hD)
-      io_direction_r <= data[3];
-   else
-      io_direction_r <= !data[0];
+	// If the CPU is doing an IN or OUT instruction, lets try to find what direction it's going
+	// We don't care what this value is if we aren't doing an I/O instruction
+	// 0 = OUT
+	// 1 = IN
+	if (data[7:4] == 4'hD)
+		io_direction_r <= data[3];
+	else
+		io_direction_r <= !data[0];
 
-   last_isr_untrap_r <= 0;
-   if (force_next_isr) begin
-      // Currently executing a BIT or MISC instruction
-      new_isr_r <= 1;
-      force_next_isr <= 0;
-		if (data == 8'h45 && !ignore_next_isr)
-         last_isr_untrap_r <= 1;
-   end
-   else if (data == 8'hCB || data == 8'hED) begin
-      // Prefix for BIT or MISC instruction
-      new_isr_r <= 0;
-      force_next_isr <= 1;
-   end
-   else if (data == 8'hDD || data == 8'hED) begin
-      // IX or IY instruction
-      new_isr_r <= 0;
-      force_next_isr <= 0;
-   end
-   else begin
-      // Normal instruction
-      new_isr_r <= 1;
-      force_next_isr <= 0;
-   end
+	last_isr_untrap_r <= 0;
+	if (!ignore_next_isr) begin
+		if (force_next_isr) begin
+			// Currently executing a BIT or MISC instruction
+			new_isr_r <= 1;
+			force_next_isr <= 0;
+			if (data == 8'h45)
+				last_isr_untrap_r <= 1;
+		end
+		else if (data == 8'hCB || data == 8'hED) begin
+			// Prefix for BIT or MISC instruction
+			new_isr_r <= 0;
+			force_next_isr <= 1;
+		end
+		else if (data == 8'hDD || data == 8'hED) begin
+			// IX or IY instruction
+			new_isr_r <= 0;
+			force_next_isr <= 0;
+		end
+		else begin
+			// Normal instruction
+			new_isr_r <= 1;
+			force_next_isr <= 0;
+		end
+	end
+	else begin
+		// Reset next isr latch
+		new_isr_r <= 0;
+		force_next_isr <= 0;
+	end
 end
 
 endmodule

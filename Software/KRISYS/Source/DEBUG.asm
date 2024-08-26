@@ -12,6 +12,8 @@
 ; ********  Debugger ********
 ; ---------------------------
 
+.area	_TEXT
+
 ; Handle for the debugger
 debug_handle:
 
@@ -34,6 +36,9 @@ debug_handle:
 	push	iy
 	
 	ld	sp,(debug_temp)
+	
+	; Save IRQ state
+	call	irq_save
 	
 	; Debugger stuff starts here
 	; Populate register dump string
@@ -95,6 +100,10 @@ debug_prompt:
 	
 ; Go back to the virutal machine
 debug_continue:
+	
+	; Restore IRQ state
+	call	irq_restore
+	call	irq_hcca_o_on
 	
 	; Restore machine context
 	ld	(debug_temp),sp
