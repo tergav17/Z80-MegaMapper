@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "KCOLECO.asm"
-              	; date: 2024-08-26 00:28:37
+              	; date: 2024-08-26 22:29:03
               	; --------------------------------------
 
 
@@ -2768,5 +2768,5 @@ zmm_trap         = $0037 =    55  _TEXT   KRISYS.asm:70
 zmm_vm_start     = $01C9 =   457  _TEXT   ZMM.asm:44 (unused)
 
 
-total time: 0.1185 sec.
+total time: 0.1324 sec.
 no errors

@@ -64,8 +64,6 @@ core_start:
 	call	zmm_bnk3_set
 	
 	; TODO: remove me
-	ld	a,(zmm_bnk0_state)
-	call	zmm_bnk3_set
 	call 	irq_hcca_o_on
 	call	zmm_irq_inter
 	
@@ -88,7 +86,7 @@ core_start:
 	call	cpm_print
 
 	call	zmm_set_virt
-	ld	hl,0xC000
+	ld	hl,0x0000
 	jp	zmm_vm_start
 	
 	
