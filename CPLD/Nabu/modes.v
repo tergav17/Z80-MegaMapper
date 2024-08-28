@@ -54,7 +54,7 @@ assign io_violation_occured = io_violation_occured_r;
 wire trap_pending = io_violation_occured_r || (!irq_sync_r && irq_intercept);
 
 // A NMI should only be asserted when trap state is reset
-assign nmi_n = !trap_pending || trap_state_r;
+assign nmi_n = !trap_pending || trap_state_r || !m1_n;
 
 // If an I/O violation occures while trap mode is reset, then set the flag
 // Otherwise, an I/O violation during trap mode will reset the flag
