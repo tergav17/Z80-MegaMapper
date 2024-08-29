@@ -35,6 +35,7 @@ irq_init:
 	out	(nabu_ay_latch),a
 	xor	a
 	out	(nabu_ay_data),a
+	ld	(irq_mask_state),a
 	
 	; Return
 	ret
@@ -45,168 +46,68 @@ irq_init:
 ; Returns nothing
 ; Uses: AF
 irq_vdp_on:
-	; Set up the AY-3-8910 I/O
-	; Make sure to only change the two most significant bits
-	ld	a,7		; AY register = 7
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
-	and	0x3F
-	or	0x40
-	out	(nabu_ay_data),a
-
-
-	; Mask on interrupt
-	ld	a,14		; AY register = 14	
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
+	ld	a,(irq_mask_state)
 	or	0b00010000
-	out	(nabu_ay_data),a
+	ld	(irq_mask_state),a
 	
-	ret
+	jp	irq_restore
 	
 ; Turns off the VDP interrupt
 ;
 ; Returns nothing
 ; Uses: AF
 irq_vdp_off:
-	; Set up the AY-3-8910 I/O
-	; Make sure to only change the two most significant bits
-	ld	a,7		; AY register = 7
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
-	and	0x3F
-	or	0x40
-	out	(nabu_ay_data),a
-
-
-	; Mask off interrupt
-	ld	a,14		; AY register = 14	
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
+	ld	a,(irq_mask_state)
 	and	~0b00010000
-	out	(nabu_ay_data),a
+	ld	(irq_mask_state),a
 	
-	ret
+	jp	irq_restore
 	
 ; Turns on the keyboard interrupt
 ;
 ; Returns nothing
 ; Uses: AF
 irq_keyb_on:
-	; Set up the AY-3-8910 I/O
-	; Make sure to only change the two most significant bits
-	ld	a,7		; AY register = 7
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
-	and	0x3F
-	or	0x40
-	out	(nabu_ay_data),a
-
-
-	; Mask on interrupt
-	ld	a,14		; AY register = 14	
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
+	ld	a,(irq_mask_state)
 	or	0b00100000
-	out	(nabu_ay_data),a
+	ld	(irq_mask_state),a
 	
-	ret
+	jp	irq_restore
 	
 ; Turns off the keyboard interrupt
 ;
 ; Returns nothing
 ; Uses: AF
 irq_keyb_off:
-	; Set up the AY-3-8910 I/O
-	; Make sure to only change the two most significant bits
-	ld	a,7		; AY register = 7
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
-	and	0x3F
-	or	0x40
-	out	(nabu_ay_data),a
-
-
-	; Mask off interrupt
-	ld	a,14		; AY register = 14	
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
+	ld	a,(irq_mask_state)
 	and	~0b00100000
-	out	(nabu_ay_data),a
+	ld	(irq_mask_state),a
 	
-	ret
-	
+	jp	irq_restore
+
 ; Turns on the HCCA output
 ;
 ; Returns nothing
 ; Uses: AF
 irq_hcca_o_on:
-	; Set up the AY-3-8910 I/O
-	; Make sure to only change the two most significant bits
-	ld	a,7		; AY register = 7
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
-	and	0x3F
-	or	0x40
-	out	(nabu_ay_data),a
-
-
-	; Mask on interrupt
-	ld	a,14		; AY register = 14	
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
+	ld	a,(irq_mask_state)
 	or	0b01000000
-	out	(nabu_ay_data),a
+	ld	(irq_mask_state),a
 	
-	ret
+	jp	irq_restore
 	
 ; Turns off the HCCA input
 ;
 ; Returns nothing
 ; Uses: AF
 irq_hcca_o_off:
-	; Set up the AY-3-8910 I/O
-	; Make sure to only change the two most significant bits
-	ld	a,7		; AY register = 7
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
-	and	0x3F
-	or	0x40
-	out	(nabu_ay_data),a
-
-
-	; Mask off interrupt
-	ld	a,14		; AY register = 14	
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
+	ld	a,(irq_mask_state)
 	and	~0b01000000
-	out	(nabu_ay_data),a
-	
-	ret
-	
-; Save the current interrupt state
-;
-; Returns nothing
-; Uses: AF
-irq_save:
-	; Set up the AY-3-8910 I/O
-	; Make sure to only change the two most significant bits
-	ld	a,7		; AY register = 7
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
-	and	0x3F
-	or	0x40
-	out	(nabu_ay_data),a
-
-
-	; Mask off interrupt
-	ld	a,14		; AY register = 14	
-	out	(nabu_ay_latch),a
-	in	a,(nabu_ay_data)
 	ld	(irq_mask_state),a
-	ret
 	
-; Save the previous interrupt state
+	jp	irq_restore
+	
+; Restore the IRQ mask from 
 ;
 ; Returns nothing
 ; Uses: AF
@@ -234,6 +135,6 @@ irq_restore:
 
 .area	_BSS
 
-; Value of untrapped SP value
+; Value interrupt mask
 irq_mask_state:
 	defs	1

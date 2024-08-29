@@ -37,9 +37,6 @@ debug_handle:
 	
 	ld	sp,(debug_temp)
 	
-	; Save IRQ state
-	call	irq_save
-	
 	; Debugger stuff starts here
 	; Populate register dump string
 	ld	bc,debug_state
@@ -103,7 +100,6 @@ debug_continue:
 	
 	; Restore IRQ state
 	call	irq_restore
-	call	irq_hcca_o_on
 	
 	; Restore machine context
 	ld	(debug_temp),sp

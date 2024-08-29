@@ -64,8 +64,8 @@ core_start:
 	call	zmm_bnk3_set
 	
 	; TODO: remove me
-	call 	irq_hcca_o_on
-	call	zmm_irq_inter
+	; call 	irq_hcca_o_on
+	; call	zmm_irq_inter
 	
 	; Mount ROM
 	ld	a,(bm_rom)
@@ -88,28 +88,7 @@ core_start:
 	call	zmm_set_virt
 	ld	hl,0x0000
 	jp	zmm_vm_start
-	
-	
-	ld	a,(zmm_bnk1_state)
-	out	(zmm_bnk3),a
-	ld	a,(zmm_top+0)
-	call	debug_point
-	ld	a,(zmm_top+1)
-	call	debug_point
-	ld	a,(zmm_top+2)
-	call	debug_point
-	ld	a,(zmm_top+3)
-	call	debug_point
-	
-	jp	cpm_exit
-	
-	
-; A = Value to print
-debug_point:
-	call	tohex
-	ld	(str_debug_val),de
-	ld	de,str_debug
-	jp	cpm_print
+
 	
 	
 ; -----------------------------------

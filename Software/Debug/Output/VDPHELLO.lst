@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "VDPHELLO.asm"
-              	; date: 2024-08-26 23:40:59
+              	; date: 2024-08-28 23:33:39
               	; --------------------------------------
 
 
@@ -37,7 +37,7 @@
 0010: 1C      		inc	e
 0011: 24      		inc	h
 0012: 2C      		inc	l
-0013: 3104B0  		ld	sp,0xB004
+0013: 31FFFF  		ld	sp,0xFFFF
               	
               		; Set up write address
 0016: 010048  		ld	bc,0x4800
@@ -131,33 +131,32 @@
 03F6: 20203A33	
               		
               		
-03FA: FFFFFFFF		.org	0x7000
-03FE: FF...   	
-7000: 3E42    		ld	a,0x42
-7002: 013412  		ld	bc,0x1234
-7005: 24      		inc	h
-7006: 2C      		inc	l
-7007: F3      		di
-7008: 0669    		ld	b,0x69
-700A: D3FF    		out	(0xFF),a
-700C: 3C      		inc	a
-700D: 04      		inc	b
-700E: 0C      		inc	c
-700F: 14      		inc	d
-7010: 1C      		inc	e
-7011: 24      		inc	h
-7012: 2C      		inc	l
-7013: 3104B0  		ld	sp,0xB004
+              	;	.org	0x7000
+              	;	ld	a,0x42
+              	;	ld	bc,0x1234
+              	;	inc	h
+              	;	inc	l
+              	;	di
+              	;	ld	b,0x69
+              	;	out	(0xFF),a
+              	;	inc	a
+              	;	inc	b
+              	;	inc	c
+              	;	inc	d
+              	;	inc	e
+              	;	inc	h
+              	;	inc	l
+              	;	ld	sp,0xB004
 
 
 ; +++ segments +++
 
-#CODE          = $0000 =     0,  size = $7016 = 28694
+#CODE          = $0000 =     0,  size = $03FA =  1018
 
 ; +++ global symbols +++
 
-_end          = $7016 = 28694          VDPHELLO.asm:16 (unused)
-_size         = $7016 = 28694          VDPHELLO.asm:16 (unused)
+_end          = $03FA =  1018          VDPHELLO.asm:16 (unused)
+_size         = $03FA =  1018          VDPHELLO.asm:16 (unused)
 nabu_vdp_addr = $00BF =   191          VDPHELLO.asm:12
 nabu_vdp_data = $00BE =   190          VDPHELLO.asm:11
 start         = $0000 =     0          VDPHELLO.asm:19 (unused)
@@ -165,5 +164,5 @@ tms_addr      = $0031 =    49          VDPHELLO.asm:57
 tms_hello     = $003A =    58          VDPHELLO.asm:67
 
 
-total time: 0.0033 sec.
+total time: 0.0024 sec.
 no errors

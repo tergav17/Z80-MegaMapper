@@ -29,7 +29,8 @@ module modes(
     output io_violation_occured,
     output trap_state,
     output nmi_n,
-    output capture_address
+    output capture_address,
+	 output test_value
     );
 
 
@@ -49,6 +50,9 @@ reg irq_sync_r;
 assign trap_state = trap_state_r;
 assign capture_address = capture_latch_r || (last_isr_untrap && trap_state && virtual_enabled);
 assign io_violation_occured = io_violation_occured_r;
+
+// todo: remove me
+assign test_value = capture_latch_r;
 
 // A trap can said to be pending when either there is an interrupt waiting, or an I/O violation has been observed
 wire trap_pending = io_violation_occured_r || (!irq_sync_r && irq_intercept);
