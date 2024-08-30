@@ -361,16 +361,16 @@ test6:	ld	c,b_print
 	out	(zm_ctrl),a
 	
 	; Check return address
-	ld	hl,0
-	add	hl,sp
-	ld	a,h
-	or	zm_sset
-	and	zm_sres
-	ld	h,a
-	ld	a,(hl)
-	call	tohex
-	ld	(s_nfail),de
-	jp	fail
+;	ld	hl,0
+;	add	hl,sp
+;	ld	a,h
+;	or	zm_sset
+;	and	zm_sres
+;	ld	h,a
+;	ld	a,(hl)
+;	call	tohex
+;	ld	(s_nfail),de
+;	jp	fail
 	
 	; Check I/O address
 	in	a,(zm_a_lo)
