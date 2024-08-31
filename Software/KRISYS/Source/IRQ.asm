@@ -96,7 +96,7 @@ irq_hcca_o_on:
 	
 	jp	irq_restore
 	
-; Turns off the HCCA input
+; Turns off the HCCA output
 ;
 ; Returns nothing
 ; Uses: AF
@@ -106,6 +106,49 @@ irq_hcca_o_off:
 	ld	(irq_mask_state),a
 	
 	jp	irq_restore
+	
+; Turns on the HCCA input
+;
+; Returns nothing
+; Uses: AF
+irq_hcca_i_on:
+	ld	a,(irq_mask_state)
+	or	0b10000000
+	ld	(irq_mask_state),a
+	
+	jp	irq_restore
+	
+; Turns off the HCCA input
+;
+; Returns nothing
+; Uses: AF
+irq_hcca_i_off:
+	ld	a,(irq_mask_state)
+	and	~0b10000000
+	ld	(irq_mask_state),a
+	
+	jp	irq_restore
+	
+; Returns the IRQ status byte
+;
+; Returns A = IRQ status
+; Uses: AF
+irq_status:
+	; Set up the AY-3-8910 I/O
+	; Make sure to only change the two most significant bits
+	ld	a,7		; AY register = 7
+	out	(nabu_ay_latch),a
+	in	a,(nabu_ay_data)
+	and	0x3F
+	or	0x40
+	out	(nabu_ay_data),a
+
+
+	; Mask off interrupt
+	ld	a,15		; AY register = 15	
+	out	(nabu_ay_latch),a
+	in	a,(nabu_ay_data)
+	ret
 	
 ; Restore the IRQ mask from 
 ;
