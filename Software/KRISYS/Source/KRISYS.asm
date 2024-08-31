@@ -128,7 +128,7 @@ kri_start:
 	call	trap_init
 	call	mem_map_init
 	call	res_init
-	
+	call 	debug_init
 	
 	; Start the core
 	jp	core_start
@@ -175,6 +175,28 @@ cpm_input:
 	; Do BDOS call
 	ld	c,bdos_input
 	call	bdos
+	
+	; Restore register
+	pop	af
+	ld	(zmm_ctrl_state),a
+	jp	zmm_ctrl_set
+	
+; Gets a character from the console
+;
+; Returns C = character returns
+; Uses: All
+cpm_getc:
+	; Save control register state
+	ld	a,(zmm_ctrl_state)
+	push	af
+	
+	; Go to real mode
+	call zmm_set_real
+	
+	; Do BDOS call
+	ld	c,bdos_con_in
+	call	bdos
+	ld	c,a
 	
 	; Restore register
 	pop	af

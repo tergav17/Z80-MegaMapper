@@ -69,7 +69,7 @@ begin
 			new_isr_r <= 0;
 			force_next_isr <= 1;
 		end
-		else if (data == 8'hDD || data == 8'hED) begin
+		else if (data == 8'hDD || data == 8'hFD) begin
 			// IX or IY instruction
 			new_isr_r <= 0;
 			force_next_isr <= 0;

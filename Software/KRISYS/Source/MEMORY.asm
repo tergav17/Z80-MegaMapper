@@ -93,6 +93,71 @@ mem_map_init:
 	; We do, return
 	ret
 	
+; Fetch byte from virtual memory
+; HL = Address to fetch
+;
+; Returns A = Fetched byte
+; Uses: AF
+mem_fvbyte:
+	; Calculate target bank
+	call	mem_getbank
+	out	(zmm_bnk3),a
+	
+	; Grab byte
+	push	hl
+	ld	a,h
+	or	0b11000000
+	ld	h,a
+	ld	h,(hl)
+	
+	; Restore original bank
+	ld	a,(zmm_bnk3_state)
+	out	(zmm_bnk3),a
+	ld	a,h
+	
+	; Return
+	pop	hl
+	ret
+
+
+; Gets the bank that an address points to
+; HL = Address to analyse
+;
+; Returns A = Value of write-enabled bank
+; Uses: AF
+mem_getbank:
+	ld	a,h
+	rlca
+	jp	c,0$
+	
+	; Lower 32K
+	rlca
+	jp	c,1$
+	
+	; 0-15K
+	ld	a,(zmm_bnk0_state)
+	and	0b01111111
+	ret
+	
+	; 16K-31K
+1$:	ld	a,(zmm_bnk1_state)
+	and	0b01111111
+	ret
+
+	; Upper 32K
+0$:	rlca
+	jp	c,2$
+	
+	; 32K-47K
+	ld	a,(zmm_bnk2_state)
+	and	0b01111111
+	ret
+
+	; 48K-63K
+2$:	ld	a,(zmm_bnk3_state)
+	and	0b01111111
+	ret
+	
 ; Allocates a bank of memory
 ; Will produce an error if no banks are available,
 ; check (banks_free) to avoid

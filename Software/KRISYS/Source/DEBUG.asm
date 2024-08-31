@@ -37,6 +37,23 @@ debug_handle:
 	
 	ld	sp,(debug_temp)
 	
+	; Check to see if we are skipping over stuff
+	ld	a,(debug_f_over)
+	or	a
+	jp	z,0$
+	
+	; Check stack pointer
+	ld	hl,(trap_sp_value)
+	ld	de,(debug_over_sp)
+	sbc	hl,de
+	jp	nz,debug_continue
+	
+	; Reset over flag
+	xor	a
+	ld	(debug_f_over),a
+	
+0$:
+	
 	; Debugger stuff starts here
 	; Populate register dump string
 	ld	bc,debug_state
@@ -60,10 +77,17 @@ debug_handle:
 	call	debug_rtohex
 	ld	hl,str_rdump_iy
 	call	debug_rtohex
-	ld	bc,trap_sp_value+2
-	ld	hl,str_rdump_sp
-	call	debug_rtohex
 	
+	; Display stack pointer
+	ld	hl,(trap_sp_value)
+	inc	hl
+	inc	hl
+	ld	a,h
+	call	tohex
+	ld	(str_rdump_sp),de
+	ld	a,l
+	call	tohex
+	ld	(str_rdump_sp+2),de
 		
 	; Extract PC from capture area
 	ld	hl,(trap_sp_value)
@@ -72,6 +96,7 @@ debug_handle:
 	or	zmm_capt_set
 	ld	h,a
 	ld	a,(hl)
+	ld	(debug_pc_state),a
 	call	tohex
 	ld	(str_rdump_pc+2),de
 	inc	hl
@@ -80,19 +105,65 @@ debug_handle:
 	or	zmm_capt_set
 	ld	h,a
 	ld	a,(hl)
+	ld	(debug_pc_state+1),a
 	call	tohex
 	ld	(str_rdump_pc),de
+	
+	; Display instruction
+	ld	hl,(debug_pc_state)
+	call	mem_fvbyte
+	call	tohex
+	ld	(str_rdump_isr),de
+	inc	hl
+	call	mem_fvbyte
+	call	tohex
+	ld	(str_rdump_isr+2),de
+	inc	hl
+	call	mem_fvbyte
+	call	tohex
+	ld	(str_rdump_isr+4),de
+	inc	hl
+	call	mem_fvbyte
+	call	tohex
+	ld	(str_rdump_isr+6),de
 	
 	; Print
 	ld	de,str_rdump
 	call	cpm_print
 	
-	; Prompt the user for commands
-debug_prompt:
-	ld	de,str_prompt
-	call	cpm_print
-	ld	de,input_buff
-	call	cpm_input
+; Query the user for an operation to perform
+debug_query:
+	call	cpm_getc
+	ld	a,c
+	
+	; Exit?
+	cp	'Q'
+	jp	z,cpm_exit
+	
+	; Over?
+	cp	'O'
+	jp	z,debug_over
+	
+	
+	; Ok, just continue then
+	jp	debug_continue
+
+
+;	ld	de,str_prompt
+;	call	cpm_print
+;	ld	de,input_buff
+;	call	cpm_input
+
+	
+; Do not enter debugger until stack is equal to the original value
+debug_over:
+	ld	hl,(trap_sp_value)
+	ld	(debug_over_sp),hl
+	
+	ld	a,0xFF
+	ld	(debug_f_over),a
+	
+	jp	debug_continue
 	
 	
 ; Go back to the virutal machine
@@ -129,6 +200,19 @@ debug_continue:
 ; ----------------------------
 
 .area	_TEXT
+
+
+; Initalize the debugger
+;
+; Returns nothing
+; Uses: AF
+debug_init:
+	
+	; Reset flags
+	xor	a
+	ld	(debug_f_over),a
+	
+	ret
 
 ; Converts a register to hexadecimal
 ; BC = Address of register value
@@ -204,9 +288,12 @@ str_rdump:
 	defb	0x1E,0x17
 	defb	'PC: '
 str_rdump_pc:
-	defb	'XXXX, SP: '
+	defb	'XXXX SP: '
 str_rdump_sp:
-	defb	'XXXX',0x0A,0x0D
+	defb	'XXXX NEXT: '
+str_rdump_isr:
+	defb	'XXXXXXXX',0x0A,0x0D
+
 	defb	'FLAGS: '
 str_rdump_flag:
 	defb	'-------- EI: '
@@ -263,6 +350,18 @@ debug_pbind:
 ; General purpose memory register
 ; Usually used in context swaps
 debug_temp:
+	defs	2
+	
+; Debug program counter value
+debug_pc_state:
+	defs	2
+	
+; Debug skip over flag
+debug_f_over:
+	defs	1
+	
+; Debug skip over stack value
+debug_over_sp:
 	defs	2
 	
 ; Machine state

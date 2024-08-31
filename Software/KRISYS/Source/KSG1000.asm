@@ -64,8 +64,8 @@ core_start:
 	call	zmm_bnk3_set
 	
 	; TODO: remove me
-	; call 	irq_hcca_o_on
-	; call	zmm_irq_inter
+	call 	irq_hcca_o_on
+	call	zmm_irq_inter
 	
 	; Mount ROM
 	ld	a,(bm_rom)
@@ -76,7 +76,7 @@ core_start:
 	call	zmm_bnk1_wp
 	
 	; Enable VDP interrupt
-	call	irq_vdp_on
+	; call	irq_vdp_on
 	
 	; Bind debugger
 	call	debug_bind
@@ -159,8 +159,8 @@ str_debug_val:
 .area	_DATA
 
 TRAP	equ	zmm_trap	; Trap Vector
-_VDD	equ	nabu_vdp_data	; VDP Data
-_VDA	equ	nabu_vdp_addr	; VDP Address
+_VDD	equ	zmm_trap	; VDP Data
+_VDA	equ	zmm_trap	; VDP Address
 
 ; Virtual machine I/O maps
 ; Input map
