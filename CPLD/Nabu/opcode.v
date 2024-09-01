@@ -61,8 +61,9 @@ begin
 			// Currently executing a BIT or MISC instruction
 			new_isr_r <= 1;
 			force_next_isr <= 0;
-			if (data == 8'h45)
+			if (data == 8'h45) begin
 				last_isr_untrap_r <= 1;
+			end
 		end
 		else if (data == 8'hCB || data == 8'hED) begin
 			// Prefix for BIT or MISC instruction

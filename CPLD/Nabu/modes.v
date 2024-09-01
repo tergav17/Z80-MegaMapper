@@ -67,30 +67,28 @@ end
 
 always @(negedge m1_n)
 begin
-	if (!m1_n) begin
-		// If the capture latch has been enabled for a M1 cycle, disable it
-		if (capture_latch_r) begin
-			capture_latch_r <= 0;
-		end
-
-		if (!trap_state_r) begin
-			// Trap must always be set when virtualization is off
-			if (!virtual_enabled)
-				trap_state_r <= 1;
-			
-			// If there is a trap pending, update the state
-			if (trap_pending && new_isr) begin
-				trap_state_r <= 1;
-				capture_latch_r <= 1;
-			end 
-		end 
-		else begin
-			// Trap can be ended by executing a jump instruction
-			if (last_isr_untrap && virtual_enabled) begin
-				trap_state_r <= 0;
-			end
-		end
+   // If the capture latch has been enabled for a M1 cycle, disable it
+   if (capture_latch_r) begin
+      capture_latch_r <= 0;
 	end
+
+   if (!trap_state_r) begin
+      // Trap must always be set when virtualization is off
+      if (!virtual_enabled)
+         trap_state_r <= 1;
+      
+      // If there is a trap pending, update the state
+      if (trap_pending && new_isr) begin
+         trap_state_r <= 1;
+         capture_latch_r <= 1;
+      end 
+   end 
+   else begin
+      // Trap can be ended by executing a jump instruction
+      if (last_isr_untrap && virtual_enabled) begin
+         trap_state_r <= 0;
+		end
+   end
 end
 
 always @(posedge m1_n)
