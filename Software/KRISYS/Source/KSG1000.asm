@@ -63,9 +63,10 @@ core_start:
 	call	mem_alloc
 	call	zmm_bnk3_set
 	
-	; TODO: remove me
-	call 	irq_hcca_o_on
+	; Set up interrupt modes
 	call	zmm_irq_inter
+	call	zmm_irq_off
+	call	irq_vdp_on
 	
 	; Mount ROM
 	ld	a,(bm_rom)
@@ -75,11 +76,8 @@ core_start:
 	call	zmm_bnk1_set
 	call	zmm_bnk1_wp
 	
-	; Enable VDP interrupt
-	; call	irq_vdp_on
-	
 	; Bind debugger
-	call	debug_bind
+	; call	debug_bind
 	
 	; Start up VM
 	ld	de,str_vm_start
@@ -89,7 +87,88 @@ core_start:
 	ld	hl,0x0000
 	jp	zmm_vm_start
 
+
+; Remaps address space so all reads of the VDP address register results in a trap
+;
+; Returns nothing
+; Uses: AF
+sg_vdpr_trap:
+	call	zmm_prgm_in
+	ld	a,zmm_trap
+	; ld	(zmm_map+0x81),a
+	; ld	(zmm_map+0x83),a
+	; ld	(zmm_map+0x85),a
+	; ld	(zmm_map+0x87),a
+	; ld	(zmm_map+0x89),a
+	; ld	(zmm_map+0x8B),a
+	; ld	(zmm_map+0x8D),a
+	; ld	(zmm_map+0x8F),a
+	; ld	(zmm_map+0x91),a
+	; ld	(zmm_map+0x93),a
+	; ld	(zmm_map+0x95),a
+	; ld	(zmm_map+0x97),a
+	; ld	(zmm_map+0x99),a
+	; ld	(zmm_map+0x9B),a
+	; ld	(zmm_map+0x9D),a
+	; ld	(zmm_map+0x9F),a
+	; ld	(zmm_map+0xA1),a
+	; ld	(zmm_map+0xA3),a
+	; ld	(zmm_map+0xA5),a
+	; ld	(zmm_map+0xA7),a
+	; ld	(zmm_map+0xA9),a
+	; ld	(zmm_map+0xAB),a
+	; ld	(zmm_map+0xAD),a
+	; ld	(zmm_map+0xAF),a
+	; ld	(zmm_map+0xB1),a
+	; ld	(zmm_map+0xB3),a
+	; ld	(zmm_map+0xB5),a
+	; ld	(zmm_map+0xB7),a
+	; ld	(zmm_map+0xB9),a
+	; ld	(zmm_map+0xBB),a
+	; ld	(zmm_map+0xBD),a
+	ld	(zmm_map+0xBF),a
+	ret
 	
+; Untraps all VDP register read operations
+;
+; Returns nothing
+; Uses: AF
+sg_vdpr_untrap:
+	call	zmm_prgm_in
+	ld	a,nabu_vdp_addr
+	; ld	(zmm_map+0x81),a
+	; ld	(zmm_map+0x83),a
+	; ld	(zmm_map+0x85),a
+	; ld	(zmm_map+0x87),a
+	; ld	(zmm_map+0x89),a
+	; ld	(zmm_map+0x8B),a
+	; ld	(zmm_map+0x8D),a
+	; ld	(zmm_map+0x8F),a
+	; ld	(zmm_map+0x91),a
+	; ld	(zmm_map+0x93),a
+	; ld	(zmm_map+0x95),a
+	; ld	(zmm_map+0x97),a
+	; ld	(zmm_map+0x99),a
+	; ld	(zmm_map+0x9B),a
+	; ld	(zmm_map+0x9D),a
+	; ld	(zmm_map+0x9F),a
+	; ld	(zmm_map+0xA1),a
+	; ld	(zmm_map+0xA3),a
+	; ld	(zmm_map+0xA5),a
+	; ld	(zmm_map+0xA7),a
+	; ld	(zmm_map+0xA9),a
+	; ld	(zmm_map+0xAB),a
+	; ld	(zmm_map+0xAD),a
+	; ld	(zmm_map+0xAF),a
+	; ld	(zmm_map+0xB1),a
+	; ld	(zmm_map+0xB3),a
+	; ld	(zmm_map+0xB5),a
+	; ld	(zmm_map+0xB7),a
+	; ld	(zmm_map+0xB9),a
+	; ld	(zmm_map+0xBB),a
+	; ld	(zmm_map+0xBD),a
+	ld	(zmm_map+0xBF),a
+	ret
 	
 ; -----------------------------------
 ; ******** Interrupt Handler ********
@@ -100,7 +179,14 @@ core_start:
 ; Handle "real" interrupts from devices (if needed)
 ; All registers except AF must remain unchanged!
 irq_handle:
-	ret
+	call	irq_status
+	rrca
+	ret	nc
+	
+	; Ok, we hit a VDP interrupt
+	call	irq_vdp_off
+	call	zmm_irq_on
+	jp	sg_vdpr_trap
 	
 	
 ; -----------------------------
@@ -113,7 +199,35 @@ irq_handle:
 ; Inputted value should be returned in register A
 ; All registers except AF must remain unchanged!
 in_handle:
-	ld	a,0xFF
+	in	a,(zmm_addr_lo)
+	rlca
+	jp	c,0$
+	
+	rlca
+	jp	c,1$
+	
+	; Device 0
+	jp	99$
+	
+	; Device 1
+1$:	jp	99$
+
+0$:	rlca
+	jp	c,2$
+	
+	; Device 2: VDP
+	call	sg_vdpr_untrap
+	call	zmm_irq_off
+	call	irq_vdp_on
+	in	a,(nabu_vdp_addr)
+	ret
+	
+	; Device 3
+2$:	jp	99$
+	
+
+	; Unknown device
+99$:	ld	a,0xFF
 	ret
 
 ; Handle an OUT instruction
@@ -159,8 +273,8 @@ str_debug_val:
 .area	_DATA
 
 TRAP	equ	zmm_trap	; Trap Vector
-_VDD	equ	zmm_trap	; VDP Data
-_VDA	equ	zmm_trap	; VDP Address
+_VDD	equ	nabu_vdp_data	; VDP Data
+_VDA	equ	nabu_vdp_addr	; VDP Address
 
 ; Virtual machine I/O maps
 ; Input map
