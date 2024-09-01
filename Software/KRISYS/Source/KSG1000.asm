@@ -67,6 +67,7 @@ core_start:
 	call	zmm_irq_inter
 	call	zmm_irq_off
 	call	irq_vdp_on
+	call	irq_keyb_on
 	
 	; Mount ROM
 	ld	a,(bm_rom)
@@ -75,6 +76,13 @@ core_start:
 	ld	a,(bm_rom+1)
 	call	zmm_bnk1_set
 	call	zmm_bnk1_wp
+	
+	; Reset joystick state
+	xor	a
+	ld	(sg_ctrl_sel),a
+	dec	a
+	ld	(sg_ctrl_1),a
+	ld	(sg_ctrl_2),a
 	
 	; Bind debugger
 	; call	debug_bind
@@ -176,6 +184,101 @@ sg_vdpr_untrap:
 	
 .area	_TEXT
 	
+	
+; Handle a "joystick" event
+sg_joystick:
+	
+	; Get the latest scancode from the keyboard
+	in	a,(nabu_key_data)
+	ld	(sg_last_stroke),a
+	
+	; Is it an 'ESC'?
+	cp	0x1B
+	jp	z,cpm_exit
+	
+	; Check for joystick 1
+	cp	0x80
+	jp	z,20$
+	
+	; Check for joystick 2
+	cp	0x81
+	jp	z,21$
+	
+	; Check for momentary keys
+	cp	0xE0
+	jp	nc,30$
+	
+	; Joystick data byte?
+	and	0b11100000
+	cp	0b10100000
+	jp	z,40$
+	
+	; Nothing useful
+	ret
+	
+	; Joystick 1 detected
+20$:	xor	a
+	ld	(sg_ctrl_sel),a
+	ret
+	
+	; Joystick 2 detected
+21$:	ld	a,1
+	ld	(sg_ctrl_sel),a
+	ret
+	
+	; Handle a momentary key
+30$:	ret
+
+	; Handle a joystick data byte
+40$:	push	hl
+	ld	hl,sg_ctrl_1
+	ld	a,(sg_ctrl_sel)
+	or	a
+	jp	nz,50$
+	
+	; Joystick 0
+	ld	a,(sg_last_stroke)
+	
+	; Left 0
+	rrca
+	set	2,(hl)
+	jp	nc,$+2
+	res	2,(hl)
+	
+	; Down 0
+	rrca
+	set	1,(hl)
+	jp	nc,$+2
+	res	1,(hl)
+	
+	; Right 0
+	rrca
+	set	3,(hl)
+	jp	nc,$+2
+	res	3,(hl)
+	
+	; Up 0
+	rrca
+	set	0,(hl)
+	jp	nc,$+2
+	res	0,(hl)
+	
+	; Fire 0
+	rrca
+	set	5,(hl)
+	jp	nc,$+2
+	res	5,(hl)
+	
+	pop	hl
+	ret
+	
+	; Joystick  1
+50$:	ld	a,(sg_last_stroke)
+
+	pop	hl
+	ret
+	
+	
 ; Handle "real" interrupts from devices (if needed)
 ; All registers except AF must remain unchanged!
 irq_handle:
@@ -183,8 +286,15 @@ irq_handle:
 	rrca
 	ret	nc
 	
+	; Interrupt detected, VDP or keyboard?
+	rrca
+	jp	c,0$
+
+	; Ok, we hit a keyboard interrupt
+	jp	sg_joystick
+	
 	; Ok, we hit a VDP interrupt
-	call	irq_vdp_off
+0$:	call	irq_vdp_off
 	call	zmm_irq_on
 	jp	sg_vdpr_trap
 	
@@ -204,16 +314,16 @@ in_handle:
 	jp	c,0$
 	
 	rlca
-	jp	c,1$
+	jp	c,10$
 	
 	; Device 0
 	jp	99$
 	
 	; Device 1
-1$:	jp	99$
+10$:	jp	99$
 
 0$:	rlca
-	jp	c,2$
+	jp	c,20$
 	
 	; Device 2: VDP
 	call	sg_vdpr_untrap
@@ -222,8 +332,18 @@ in_handle:
 	in	a,(nabu_vdp_addr)
 	ret
 	
-	; Device 3
-2$:	jp	99$
+	; Device 3: Joystick
+20$	in	a,(zmm_addr_lo)
+	rrca
+	jp	c,25$
+	
+	; Read controller 1
+	ld	a,(sg_ctrl_1)
+	ret
+	
+	; Read controller 2
+25$:	ld	a,(sg_ctrl_2)
+	ret
 	
 
 	; Unknown device
@@ -326,3 +446,19 @@ io_map_output:
 ; Reflected state of control register
 bm_rom:
 	defs	2
+	
+; Last stroke from the keyboard
+sg_last_stroke:
+	defs	1
+	
+; Selected joystick for updating
+; 0 = Joystick 1 selected
+; 1 = Joystick 2 selected
+sg_ctrl_sel:
+	defs	1
+	
+; SG-1000 joystick states
+sg_ctrl_1:
+	defs	1
+sg_ctrl_2:
+	defs	1

@@ -35,7 +35,7 @@ stack_size = 0x20
 #code	_DATA,_TEXT_end
 #data	_BSS,_DATA_end
 
-; Make sure w don't overrun available memory
+; Make sure we don't overrun available memory
 #assert	_BSS_end < (zmm_capture-stack_size)
 
 .area	_TEXT
@@ -84,6 +84,8 @@ nmi_vector	equ	nmi_address+1
 nabu_nctl	equ	0x00	; NABU Control Register
 nabu_ay_data	equ	0x40	; AY-3-8910 Data Port
 nabu_ay_latch	equ	0x41	; AY-3-8910 Latch Port
+nabu_key_data	equ	0x90	; NABU Keyboard Data
+nabu_key_stat	equ	0x91	; NABU Keyboard Status
 nabu_vdp_data	equ	0xA0	; VDP Data Port
 nabu_vdp_addr	equ	0xA1	; VDP Address Port
 

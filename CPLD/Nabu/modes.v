@@ -29,7 +29,8 @@ module modes(
     output io_violation_occured,
     output trap_state,
     output nmi_n,
-    output capture_address
+    output capture_address,
+	 output irq_sync
     );
 
 
@@ -47,6 +48,7 @@ reg irq_sync_r;
 
 // Assign registers to outputs
 assign trap_state = trap_state_r;
+assign irq_sync = irq_sync_r;
 assign capture_address = capture_latch_r || (last_isr_untrap && trap_state && virtual_enabled);
 assign io_violation_occured = io_violation_occured_r;
 
@@ -65,26 +67,30 @@ end
 
 always @(negedge m1_n)
 begin
-   // If the capture latch has been enabled for a M1 cycle, disable it
-   if (capture_latch_r)
-      capture_latch_r <= 0;
+	if (!m1_n) begin
+		// If the capture latch has been enabled for a M1 cycle, disable it
+		if (capture_latch_r) begin
+			capture_latch_r <= 0;
+		end
 
-   if (!trap_state_r) begin
-      // Trap must always be set when virtualization is off
-      if (!virtual_enabled)
-         trap_state_r <= 1;
-      
-      // If there is a trap pending, update the state
-      if (trap_pending && new_isr) begin
-         trap_state_r <= 1;
-         capture_latch_r <= 1;
-      end 
-   end 
-   else begin
-      // Trap can be ended by executing a jump instruction
-      if (last_isr_untrap && virtual_enabled)
-         trap_state_r <= 0;
-   end
+		if (!trap_state_r) begin
+			// Trap must always be set when virtualization is off
+			if (!virtual_enabled)
+				trap_state_r <= 1;
+			
+			// If there is a trap pending, update the state
+			if (trap_pending && new_isr) begin
+				trap_state_r <= 1;
+				capture_latch_r <= 1;
+			end 
+		end 
+		else begin
+			// Trap can be ended by executing a jump instruction
+			if (last_isr_untrap && virtual_enabled) begin
+				trap_state_r <= 0;
+			end
+		end
+	end
 end
 
 always @(posedge m1_n)

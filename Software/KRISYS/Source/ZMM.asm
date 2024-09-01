@@ -63,7 +63,7 @@ zmm_vm_start:
 	out	(zmm_trap),a
 	
 	; Zero everything
-	ld	a,1
+	xor	a
 	ld	b,a
 	ld	c,a
 	ld 	d,a
@@ -72,7 +72,7 @@ zmm_vm_start:
 	ld	l,a
 	exx
 	ex	af,af'
-	ld	a,1
+	xor	a
 	ld	b,a
 	ld	c,a
 	ld 	d,a

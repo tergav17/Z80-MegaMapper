@@ -69,6 +69,9 @@ wire trap_state;
 // What is the direction of the I/O instruction we may be execution
 wire io_direction;
 
+// Interrupt sync
+wire irq_sync;
+
 // Define control register bits
 wire virtual_enable = ctrl_register[0];
 wire set_trans_direction = ctrl_register[1];
@@ -95,7 +98,7 @@ assign trans_wr_n = !mreq_override_cond || mreq_n || !(trap_state && !hi_addr[0]
 assign xmem_sel_n = !mreq_override_cond || mreq_n || (trap_state && !hi_addr[0]);
 
 // When the trap state is reset, maskable interrupts should be controlled by the control register
-assign irq_n = (trap_state || !irq_intercept) ? irq_sys_n : !force_irq;
+assign irq_n = (trap_state || !irq_intercept) ? irq_sync : !force_irq;
 
 // Address translations should always be done if virtualization is enabled and trap state is disabled
 // Unless a memory I/O access in incoming, of course
@@ -116,6 +119,6 @@ registers reg_0(data, wr_n, rd_n, m1_n, !trap_state, read_isr_en, write_ctrl_en,
 opcode opcode_0(data, m1_n, capture_addr, new_isr, last_isr_untrap, io_direction);
 
 // Create instance of mode logic
-modes modes_0(io_violation_cond, irq_sys_n, m1_n, new_isr, last_isr_untrap, virtual_enable, irq_intercept, io_violation_occured, trap_state, nmi_n, capture_addr);
+modes modes_0(io_violation_cond, irq_sys_n, m1_n, new_isr, last_isr_untrap, virtual_enable, irq_intercept, io_violation_occured, trap_state, nmi_n, capture_addr, irq_sync);
 
 endmodule
