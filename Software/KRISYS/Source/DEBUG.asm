@@ -144,6 +144,10 @@ debug_query:
 	cp	'O'
 	jp	z,debug_over
 	
+	; Upper?
+	cp	'U'
+	jp	z,debug_upper
+	
 	
 	; Ok, just continue then
 	jp	debug_continue
@@ -165,6 +169,17 @@ debug_over:
 	
 	jp	debug_continue
 	
+; Do not enter debugger until current function has been returned from
+debug_upper:
+	ld	hl,(trap_sp_value)
+	inc	hl
+	inc	hl
+	ld	(debug_over_sp),hl
+	
+	ld	a,0xFF
+	ld	(debug_f_over),a
+	
+	jp	debug_continue	
 	
 ; Go back to the virutal machine
 debug_continue:

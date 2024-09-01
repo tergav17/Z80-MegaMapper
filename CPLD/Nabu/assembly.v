@@ -76,12 +76,12 @@ wire irq_intercept = ctrl_register[2];
 wire force_irq = ctrl_register[3];
 
 // We should capture the current "real" address everytime there is an I/O violation
-// assign trap_addr_wr_n = !io_violation_cond;
+assign trap_addr_wr_n = !io_violation_cond;
 
 // For when we want to read either the high or low trap address
 assign trap_addr_rd_n = !(mapper_io && !lo_addr[2] && lo_addr[1]) || rd_n;
 
-// For wehn we want to write to the bank registers
+// For when we want to write to the bank registers
 assign bank_wr_n = !(mapper_io && !lo_addr[2]) || wr_n;
 
 // Supress I/O when in mapper I/O space
@@ -116,6 +116,6 @@ registers reg_0(data, wr_n, rd_n, m1_n, !trap_state, read_isr_en, write_ctrl_en,
 opcode opcode_0(data, m1_n, capture_addr, new_isr, last_isr_untrap, io_direction);
 
 // Create instance of mode logic
-modes modes_0(io_violation_cond, irq_sys_n, m1_n, new_isr, last_isr_untrap, virtual_enable, irq_intercept, io_violation_occured, trap_state, nmi_n, capture_addr, trap_addr_wr_n);
+modes modes_0(io_violation_cond, irq_sys_n, m1_n, new_isr, last_isr_untrap, virtual_enable, irq_intercept, io_violation_occured, trap_state, nmi_n, capture_addr);
 
 endmodule
