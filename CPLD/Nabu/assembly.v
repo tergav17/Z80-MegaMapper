@@ -72,6 +72,9 @@ wire io_direction;
 // Interrupt sync
 wire irq_sync;
 
+// Capture latch
+wire capture_latch;
+
 // Define control register bits
 wire virtual_enable = ctrl_register[0];
 wire set_trans_direction = ctrl_register[1];
@@ -109,6 +112,9 @@ assign trans_addr = virtual_enable && !trap_state && mreq_n && refresh_n;
 // on whenever we are doing an input or an output instruction
 assign trans_direction = mreq_n ? io_direction : set_trans_direction;
 
+// Address capture logic
+assign capture_addr = capture_latch || (last_isr_untrap && trap_state && virtual_enable && wr_n);
+
 // I/O violations need to be readable from the instruction register
 wire io_violation_occured;
 
@@ -119,6 +125,6 @@ registers reg_0(data, wr_n, rd_n, m1_n, !trap_state, read_isr_en, write_ctrl_en,
 opcode opcode_0(data, m1_n, capture_addr, new_isr, last_isr_untrap, io_direction);
 
 // Create instance of mode logic
-modes modes_0(io_violation_cond, irq_sys_n, m1_n, new_isr, last_isr_untrap, virtual_enable, irq_intercept, io_violation_occured, trap_state, nmi_n, capture_addr, irq_sync);
+modes modes_0(io_violation_cond, irq_sys_n, m1_n, new_isr, last_isr_untrap, virtual_enable, irq_intercept, io_violation_occured, trap_state, nmi_n, capture_latch, irq_sync);
 
 endmodule

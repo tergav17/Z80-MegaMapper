@@ -3,6 +3,7 @@ NET data<7> LOC=P2;
 NET data<0> LOC=P3;
 NET trap_addr_rd_n LOC=P4;
 NET m1_n LOC=P5;
+NET m1_n BUFG=CLK;
 NET wr_n LOC=P6;
 NET mreq_n LOC=P7;
 NET data<1> LOC=P8;
