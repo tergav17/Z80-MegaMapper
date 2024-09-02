@@ -4,7 +4,7 @@ OUT = ./Output
 SOURCE = ./Source
 ZASM = zasm
 
-all: $(OUT)/ZMMBAS.COM $(OUT)/TPAINTEG.COM $(OUT)/IDEINTEG.COM $(OUT)/VDPHELLO.COM
+all: $(OUT)/ZMMBAS.COM $(OUT)/TPAINTEG.COM $(OUT)/IDEINTEG.COM $(OUT)/VDPHELLO.COM $(OUT)/IOTEST.COM
 
 $(OUT)/%.COM: $(SOURCE)/%.asm
 	$(ZASM) $(SOURCE)/$*.asm -u -w -b $(OUT)/$*.COM
