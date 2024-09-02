@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "IOTEST.asm"
-              	; date: 2024-09-02 00:09:16
+              	; date: 2024-09-02 17:57:37
               	; --------------------------------------
 
 
@@ -23,101 +23,101 @@
 0000: 31FFFF  		ld	sp,0xFFFF
               		
               		; --- IN INSTRUCTIONS ---
-0003: CD9E01  		call	set_all
+0003: CDAD01  		call	set_all
 0006: DB00    		in	a,(test_port)
-0008: CDB901  		call	res_all
+0008: CDC801  		call	res_all
 000B: DB00    		in	a,(test_port)
               		
-000D: CD9E01  		call	set_all
+000D: CDAD01  		call	set_all
 0010: 0E00    		ld	c,test_port
 0012: ED40    		in	b,(c)
-0014: CDB901  		call	res_all
+0014: CDC801  		call	res_all
 0017: 0E00    		ld	c,test_port
 0019: ED40    		in	b,(c)
               		
-001B: CD9E01  		call	set_all
+001B: CDAD01  		call	set_all
 001E: 0E00    		ld	c,test_port
 0020: ED48    		in	c,(c)
-0022: CDB901  		call	res_all
+0022: CDC801  		call	res_all
 0025: 0E00    		ld	c,test_port
 0027: ED48    		in	c,(c)
               		
-0029: CD9E01  		call	set_all
+0029: CDAD01  		call	set_all
 002C: 0E00    		ld	c,test_port
 002E: ED50    		in	d,(c)
-0030: CDB901  		call	res_all
+0030: CDC801  		call	res_all
 0033: 0E00    		ld	c,test_port
 0035: ED50    		in	d,(c)
               		
-0037: CD9E01  		call	set_all
+0037: CDAD01  		call	set_all
 003A: 0E00    		ld	c,test_port
 003C: ED58    		in	e,(c)
-003E: CDB901  		call	res_all
+003E: CDC801  		call	res_all
 0041: 0E00    		ld	c,test_port
 0043: ED58    		in	e,(c)
               		
-0045: CD9E01  		call	set_all
+0045: CDAD01  		call	set_all
 0048: 0E00    		ld	c,test_port
 004A: ED60    		in	h,(c)
-004C: CDB901  		call	res_all
+004C: CDC801  		call	res_all
 004F: 0E00    		ld	c,test_port
 0051: ED60    		in	h,(c)
               		
-0053: CD9E01  		call	set_all
+0053: CDAD01  		call	set_all
 0056: 0E00    		ld	c,test_port
 0058: ED68    		in	l,(c)
-005A: CDB901  		call	res_all
+005A: CDC801  		call	res_all
 005D: 0E00    		ld	c,test_port
 005F: ED68    		in	l,(c)
               		
-0061: CD9E01  		call	set_all
+0061: CDAD01  		call	set_all
 0064: 0E00    		ld	c,test_port
 0066: ED70    		in	f,(c)
-0068: CDB901  		call	res_all
+0068: CDC801  		call	res_all
 006B: 0E00    		ld	c,test_port
 006D: ED70    		in	f,(c)
               		
-006F: CD9E01  		call	set_all
+006F: CDAD01  		call	set_all
 0072: 0E00    		ld	c,test_port
 0074: ED78    		in	a,(c)
-0076: CDB901  		call	res_all
+0076: CDC801  		call	res_all
 0079: 0E00    		ld	c,test_port
 007B: ED78    		in	a,(c)
               		
-007D: CD9E01  		call	set_all
+007D: CDAD01  		call	set_all
 0080: 0E00    		ld	c,test_port
 0082: 2100C0  		ld	hl,0xC000
 0085: EDA2    		ini
 0087: 3A00C0  		ld	a,(0xC000)
 008A: ED70    		in	f,(c)
-008C: CDB901  		call	res_all
+008C: CDC801  		call	res_all
 008F: 0E00    		ld	c,test_port
 0091: 2100C0  		ld	hl,0xC000
 0094: EDA2    		ini
 0096: 3A00C0  		ld	a,(0xC000)
 0099: ED70    		in	f,(c)
               		
-009B: CD9E01  		call	set_all
+009B: CDAD01  		call	set_all
 009E: 0E00    		ld	c,test_port
 00A0: 2100C0  		ld	hl,0xC000
 00A3: EDAA    		ind
 00A5: 3A00C0  		ld	a,(0xC000)
 00A8: ED70    		in	f,(c)
-00AA: CDB901  		call	res_all
+00AA: CDC801  		call	res_all
 00AD: 0E00    		ld	c,test_port
 00AF: 2100C0  		ld	hl,0xC000
 00B2: EDAA    		ind
 00B4: 3A00C0  		ld	a,(0xC000)
 00B7: ED70    		in	f,(c)
               		
-00B9: CD9E01  		call	set_all
+00B9: CDAD01  		call	set_all
 00BC: 0601    		ld	b,1
 00BE: 0E00    		ld	c,test_port
 00C0: 2100C0  		ld	hl,0xC000
 00C3: EDB2    		inir
 00C5: 3A00C0  		ld	a,(0xC000)
 00C8: ED70    		in	f,(c)
-00CA: CDB901  		call	res_all
+00CA: CDC801  		call	res_all
 00CD: 0601    		ld	b,1
 00CF: 0E00    		ld	c,test_port
 00D1: 2100C0  		ld	hl,0xC000
@@ -125,14 +125,14 @@
 00D6: 3A00C0  		ld	a,(0xC000)
 00D9: ED70    		in	f,(c)
               		
-00DB: CD9E01  		call	set_all
+00DB: CDAD01  		call	set_all
 00DE: 0601    		ld	b,1
 00E0: 0E00    		ld	c,test_port
 00E2: 2100C0  		ld	hl,0xC000
 00E5: EDBA    		indr
 00E7: 3A00C0  		ld	a,(0xC000)
 00EA: ED70    		in	f,(c)
-00EC: CDB901  		call	res_all
+00EC: CDC801  		call	res_all
 00EF: 0601    		ld	b,1
 00F1: 0E00    		ld	c,test_port
 00F3: 2100C0  		ld	hl,0xC000
@@ -141,156 +141,163 @@
 00FB: ED70    		in	f,(c)
               		
               		; --- OUT INSTRUCTIONS ---
-00FD: CD7501  		call	inc_all
+00FD: CD8401  		call	inc_all
 0100: D300    		out	(test_port),a
               		
-0102: CD7501  		call	inc_all
+0102: CD8401  		call	inc_all
 0105: 0E00    		ld	c,test_port
 0107: ED41    		out	(c),b
               		
-0109: CD7501  		call	inc_all
+0109: CD8401  		call	inc_all
 010C: 0E00    		ld	c,test_port
 010E: ED49    		out	(c),c
               		
-0110: CD7501  		call	inc_all
+0110: CD8401  		call	inc_all
 0113: 0E00    		ld	c,test_port
 0115: ED51    		out	(c),d
               		
-0117: CD7501  		call	inc_all
+0117: CD8401  		call	inc_all
 011A: 0E00    		ld	c,test_port
 011C: ED59    		out	(c),e
               		
-011E: CD7501  		call	inc_all
+011E: CD8401  		call	inc_all
 0121: 0E00    		ld	c,test_port
 0123: ED61    		out	(c),h
               		
-0125: CD7501  		call	inc_all
+0125: CD8401  		call	inc_all
 0128: 0E00    		ld	c,test_port
 012A: ED69    		out	(c),l
               		
-012C: CD7501  		call	inc_all
+012C: CD8401  		call	inc_all
 012F: 0E00    		ld	c,test_port
 0131: ED71    		out	(c),0
               		
-0133: CD7501  		call	inc_all
+0133: CD8401  		call	inc_all
 0136: 0E00    		ld	c,test_port
 0138: ED79    		out	(c),a
               		
-013A: CD7501  		call	inc_all
+013A: CD8401  		call	inc_all
 013D: 2100C0  		ld	hl,0xC000
 0140: 3669    		ld	(hl),0x69
 0142: 0E00    		ld	c,test_port
 0144: 0603    		ld	b,3
 0146: EDA3    		outi
               		
-0148: CD7501  		call	inc_all
+0148: CD8401  		call	inc_all
 014B: 2100C0  		ld	hl,0xC000
 014E: 3669    		ld	(hl),0x69
 0150: 0E00    		ld	c,test_port
 0152: 0603    		ld	b,3
 0154: EDAB    		outd
               		
-0156: CD7501  		call	inc_all
+0156: CD8401  		call	inc_all
 0159: 2100C0  		ld	hl,0xC000
 015C: 3669    		ld	(hl),0x69
 015E: 0E00    		ld	c,test_port
 0160: 0603    		ld	b,3
 0162: EDB3    		otir
               		
-0164: CD7501  		call	inc_all
+0164: CD8401  		call	inc_all
 0167: 2100C0  		ld	hl,0xC000
 016A: 3669    		ld	(hl),0x69
 016C: 0E00    		ld	c,test_port
 016E: 0603    		ld	b,3
 0170: EDBB    		otdr
               		
-0172: C37201  	done:	jp	done
+0172: DD2100C0		ld	ix,0xC000
+0176: 00      	done:	nop
+0177: CB47    		bit	0,a
+0179: 00      		nop
+017A: CB46    		bit	0,(hl)
+017C: 00      		nop
+017D: FDCB6946		bit	0,(iy+0x69)
+0181: C37601  		jp	done
               		
               		
               		; Sets all registers to incrementing values
-0175:         	inc_all:
-0175: 3E01    		ld	a,0x01
-0177: 0602    		ld	b,0x02
-0179: 0E03    		ld	c,0x03
-017B: 1604    		ld	d,0x04
-017D: 1E05    		ld	e,0x05
-017F: 2606    		ld	h,0x06
-0181: 2E07    		ld	l,0x07
-0183: 08      		ex	af,af'
-0184: D9      		exx
-0185: 3E08    		ld	a,0x08
-0187: 0609    		ld	b,0x09
-0189: 0E0A    		ld	c,0x0A
-018B: 160B    		ld	d,0x0B
-018D: 1E0C    		ld	e,0x0C
-018F: 260D    		ld	h,0x0D
-0191: 2E0E    		ld	l,0x0E
-0193: 08      		ex	af,af'
-0194: D9      		exx
-0195: DD211110		ld	ix,0x1011
-0199: FD211312		ld	iy,0x1213
-019D: C9      		ret
+0184:         	inc_all:
+0184: 3E01    		ld	a,0x01
+0186: 0602    		ld	b,0x02
+0188: 0E03    		ld	c,0x03
+018A: 1604    		ld	d,0x04
+018C: 1E05    		ld	e,0x05
+018E: 2606    		ld	h,0x06
+0190: 2E07    		ld	l,0x07
+0192: 08      		ex	af,af'
+0193: D9      		exx
+0194: 3E08    		ld	a,0x08
+0196: 0609    		ld	b,0x09
+0198: 0E0A    		ld	c,0x0A
+019A: 160B    		ld	d,0x0B
+019C: 1E0C    		ld	e,0x0C
+019E: 260D    		ld	h,0x0D
+01A0: 2E0E    		ld	l,0x0E
+01A2: 08      		ex	af,af'
+01A3: D9      		exx
+01A4: DD211110		ld	ix,0x1011
+01A8: FD211312		ld	iy,0x1213
+01AC: C9      		ret
               		
               		; Sets all registers to 0xFF
-019E:         	set_all:
-019E: 3EFF    		ld	a,0xFF
-01A0: 47      		ld	b,a
-01A1: 4F      		ld	c,a
-01A2: 57      		ld	d,a
-01A3: 5F      		ld	e,a
-01A4: 67      		ld	h,a
-01A5: 6F      		ld	l,a
-01A6: 08      		ex	af,af'
-01A7: D9      		exx
-01A8: 3EFF    		ld	a,0xFF
-01AA: 47      		ld	b,a
-01AB: 4F      		ld	c,a
-01AC: 57      		ld	d,a
-01AD: 5F      		ld	e,a
-01AE: 67      		ld	h,a
-01AF: 6F      		ld	l,a
-01B0: DD21FFFF		ld	ix,0xFFFF
-01B4: FD21FFFF		ld	iy,0xFFFF
-01B8: C9      		ret
+01AD:         	set_all:
+01AD: 3EFF    		ld	a,0xFF
+01AF: 47      		ld	b,a
+01B0: 4F      		ld	c,a
+01B1: 57      		ld	d,a
+01B2: 5F      		ld	e,a
+01B3: 67      		ld	h,a
+01B4: 6F      		ld	l,a
+01B5: 08      		ex	af,af'
+01B6: D9      		exx
+01B7: 3EFF    		ld	a,0xFF
+01B9: 47      		ld	b,a
+01BA: 4F      		ld	c,a
+01BB: 57      		ld	d,a
+01BC: 5F      		ld	e,a
+01BD: 67      		ld	h,a
+01BE: 6F      		ld	l,a
+01BF: DD21FFFF		ld	ix,0xFFFF
+01C3: FD21FFFF		ld	iy,0xFFFF
+01C7: C9      		ret
               		
               		; Resets all registers to 0x00
-01B9:         	res_all:
-01B9: 3E00    		ld	a,0x00
-01BB: 47      		ld	b,a
-01BC: 4F      		ld	c,a
-01BD: 57      		ld	d,a
-01BE: 5F      		ld	e,a
-01BF: 67      		ld	h,a
-01C0: 6F      		ld	l,a
-01C1: 08      		ex	af,af'
-01C2: D9      		exx
-01C3: 3E00    		ld	a,0x00
-01C5: 47      		ld	b,a
-01C6: 4F      		ld	c,a
-01C7: 57      		ld	d,a
-01C8: 5F      		ld	e,a
-01C9: 67      		ld	h,a
-01CA: 6F      		ld	l,a
-01CB: DD21FFFF		ld	ix,0xFFFF
-01CF: FD21FFFF		ld	iy,0xFFFF
-01D3: C9      		ret
+01C8:         	res_all:
+01C8: 3E00    		ld	a,0x00
+01CA: 47      		ld	b,a
+01CB: 4F      		ld	c,a
+01CC: 57      		ld	d,a
+01CD: 5F      		ld	e,a
+01CE: 67      		ld	h,a
+01CF: 6F      		ld	l,a
+01D0: 08      		ex	af,af'
+01D1: D9      		exx
+01D2: 3E00    		ld	a,0x00
+01D4: 47      		ld	b,a
+01D5: 4F      		ld	c,a
+01D6: 57      		ld	d,a
+01D7: 5F      		ld	e,a
+01D8: 67      		ld	h,a
+01D9: 6F      		ld	l,a
+01DA: DD210000		ld	ix,0x0000
+01DE: FD210000		ld	iy,0x0000
+01E2: C9      		ret
 
 
 ; +++ segments +++
 
-#CODE          = $0000 =     0,  size = $01D4 =   468
+#CODE          = $0000 =     0,  size = $01E3 =   483
 
 ; +++ global symbols +++
 
-_end      = $01D4 =   468          IOTEST.asm:14 (unused)
-_size     = $01D4 =   468          IOTEST.asm:14 (unused)
-done      = $0172 =   370          IOTEST.asm:201
-inc_all   = $0175 =   373          IOTEST.asm:205
-res_all   = $01B9 =   441          IOTEST.asm:251
-set_all   = $019E =   414          IOTEST.asm:229
+_end      = $01E3 =   483          IOTEST.asm:14 (unused)
+_size     = $01E3 =   483          IOTEST.asm:14 (unused)
+done      = $0176 =   374          IOTEST.asm:202
+inc_all   = $0184 =   388          IOTEST.asm:212
+res_all   = $01C8 =   456          IOTEST.asm:258
+set_all   = $01AD =   429          IOTEST.asm:236
 start     = $0000 =     0          IOTEST.asm:16 (unused)
 test_port = $0000 =     0          IOTEST.asm:11
 
 
-total time: 0.0033 sec.
+total time: 0.0020 sec.
 no errors

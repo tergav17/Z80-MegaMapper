@@ -72,10 +72,10 @@ core_start:
 	; Mount ROM
 	ld	a,(bm_rom)
 	call	zmm_bnk0_set
-;	call	zmm_bnk0_wp
+	call	zmm_bnk0_wp
 	ld	a,(bm_rom+1)
 	call	zmm_bnk1_set
-;	call	zmm_bnk1_wp
+	call	zmm_bnk1_wp
 	
 	; Reset joystick state
 	xor	a
@@ -85,7 +85,7 @@ core_start:
 	ld	(sg_ctrl_2),a
 	
 	; Bind debugger
-	; call	debug_bind
+;	call	debug_bind
 	
 	; Start up VM
 	ld	de,str_vm_start

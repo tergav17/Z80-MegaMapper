@@ -198,7 +198,14 @@ start:
 	ld	b,3
 	otdr
 	
-done:	jp	done
+	ld	ix,0xC000
+done:	nop
+	bit	0,a
+	nop
+	bit	0,(hl)
+	nop
+	bit	0,(iy+0x69)
+	jp	done
 	
 	
 	; Sets all registers to incrementing values
@@ -265,6 +272,6 @@ res_all:
 	ld	e,a
 	ld	h,a
 	ld	l,a
-	ld	ix,0xFFFF
-	ld	iy,0xFFFF
+	ld	ix,0x0000
+	ld	iy,0x0000
 	ret

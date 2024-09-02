@@ -36,6 +36,9 @@ reg last_isr_untrap_r = 0;
 // The next byte read will be the end of a multi-byte instruction
 reg force_next_isr = 1;
 
+// Keep track of if the opcode was IX / IY
+reg last_opcode_index_r = 0;
+
 // Keeps track of the direction of the current I/O instruction
 reg io_direction_r = 0;
 
@@ -61,24 +64,34 @@ begin
 			// Currently executing a BIT or MISC instruction
 			new_isr_r <= 1;
 			force_next_isr <= 0;
+			last_opcode_index_r <= 0;
 			if (data == 8'h45) begin
 				last_isr_untrap_r <= 1;
 			end
 		end
 		else if (data == 8'hCB || data == 8'hED) begin
 			// Prefix for BIT or MISC instruction
-			new_isr_r <= 0;
-			force_next_isr <= 1;
+			if (!last_opcode_index_r) begin
+				new_isr_r <= 0;
+				force_next_isr <= 1;
+			end
+			else begin
+				new_isr_r <= 1;
+				force_next_isr <= 0;
+			end
+			last_opcode_index_r <= 0;
 		end
 		else if (data == 8'hDD || data == 8'hFD) begin
 			// IX or IY instruction
 			new_isr_r <= 0;
 			force_next_isr <= 0;
+			last_opcode_index_r <= 1;
 		end
 		else begin
 			// Normal instruction
 			new_isr_r <= 1;
 			force_next_isr <= 0;
+			last_opcode_index_r <= 0;
 		end
 	end
 	else begin
