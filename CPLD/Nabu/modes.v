@@ -27,6 +27,7 @@ module modes(
     input virtual_enabled,
 	 input irq_intercept,
 	 input rd_n,
+	 input iorq_n,
     output io_violation_occured,
     output trap_state,
     output nmi_n,
@@ -36,16 +37,19 @@ module modes(
 
 
 // Flip-flop to keep track of if a trap is currently happening 
-reg trap_state_r;
+reg trap_state_r = 0;
 
 // Has an I/O address violation occured?
-reg io_violation_occured_r;
+reg io_violation_occured_r = 0;
 
 // Address capture latch
-reg capture_latch_r;
+reg capture_latch_r = 0;
 
 // Interrupt sync
-reg irq_sync_r;
+reg irq_sync_r = 0;
+
+// Was this I/O operation the result of an IRQ response?
+reg doing_irq_response_r = 0;
 
 // Assign registers to outputs
 assign trap_state = trap_state_r;
@@ -59,11 +63,20 @@ wire trap_pending = io_violation_occured_r || (!irq_sync_r && irq_intercept);
 // A NMI should only be asserted when trap state is reset
 assign nmi_n = !trap_pending || trap_state_r || !m1_n;
 
+// Keep track of if an I/O request started during an M1 clock cycle
+// If so, this is definately an IRQ request instead of an I/O operations
+always @(negedge iorq_n)
+begin
+	doing_irq_response_r = !m1_n;
+end
+
 // If an I/O violation occures while trap mode is reset, then set the flag
 // Otherwise, an I/O violation during trap mode will reset the flag
 always @(posedge io_violation)
 begin
-   io_violation_occured_r = !trap_state_r;
+	if (!doing_irq_response_r) begin
+		io_violation_occured_r = !trap_state_r;
+	end
 end
 
 always @(negedge m1_n)

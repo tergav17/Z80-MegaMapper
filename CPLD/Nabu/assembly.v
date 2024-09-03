@@ -125,6 +125,6 @@ registers reg_0(data, wr_n, rd_n, m1_n, !trap_state, read_isr_en, write_ctrl_en,
 opcode opcode_0(data, m1_n, capture_addr, new_isr, last_isr_untrap, io_direction);
 
 // Create instance of mode logic
-modes modes_0(io_violation_cond, irq_sys_n, m1_n, new_isr, last_isr_untrap, virtual_enable, irq_intercept, rd_n, io_violation_occured, trap_state, nmi_n, capture_latch, irq_sync);
+modes modes_0(io_violation_cond, irq_sys_n, m1_n, new_isr, last_isr_untrap, virtual_enable, irq_intercept, rd_n, iorq_n, io_violation_occured, trap_state, nmi_n, capture_latch, irq_sync);
 
 endmodule
