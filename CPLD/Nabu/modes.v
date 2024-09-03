@@ -70,13 +70,13 @@ begin
 	doing_irq_response_r = !m1_n;
 end
 
+assign io_trap_event = io_violation && !doing_irq_response_r;
+
 // If an I/O violation occures while trap mode is reset, then set the flag
 // Otherwise, an I/O violation during trap mode will reset the flag
-always @(posedge io_violation)
+always @(posedge io_trap_event)
 begin
-	if (!doing_irq_response_r) begin
 		io_violation_occured_r = !trap_state_r;
-	end
 end
 
 always @(negedge m1_n)
