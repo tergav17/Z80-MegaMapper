@@ -90,19 +90,16 @@ snpsg_send:
 	cp	c
 	jp	z,20$
 
+	; Frequency (low bits)
 	ld	a,b
 	ld	b,0
 	sla	c
+	ld	hl,snpsg_freq
 	add	hl,bc
-	rrca
-	rr	b
-	rrca
-	rr	b
-	and	0b00000011
-	ld	(hl),a
-	inc	hl
+	and	0b00001111
+	ld	b,a
 	ld	a,(hl)
-	and	0b00111111
+	and	0b11110000
 	or	b
 	ld	(hl),a
 	ld	(snpsg_lastf),hl
@@ -114,26 +111,36 @@ snpsg_send:
 	ld	(snpsg_n_ctrl),a
 	jp	80$
 	
-	; Frequency (low bits)
+	; Frequency (high bits)
 30$:	ld	a,b
-	and	0b00111111
-	ld	b,a
+	ld	b,0
+	rlca
+	rlca
+	rlca
+	rl	b
+	rlca
+	rl	b
+	and	0b11110000
+	ld	c,a
 	ld	hl,(snpsg_lastf)
-	ld	a,0b11000000
+	ld	a,0b00001111
 	and	(hl)
-	or	b
+	or	c
 	ld	(hl),a
+	inc	hl
+	ld	(hl),b
 	
 	; Update the state to the AY-3-8910
-80$:	ld	a,7
+80$:	ld	a,0
 	ld	c,nabu_ay_data
-	ld	hl,snpsg_freq+6
+	ld	hl,snpsg_freq
 	
 	; Set frequency
 81$:	out	(nabu_ay_latch),a
-	outd
-	dec	a
-	jp	p,81$
+	outi
+	inc	a
+	cp	6
+	jp	nz,81$
 	
 	; Set channel mask
 	ld	a,7
@@ -152,6 +159,7 @@ snpsg_send:
 	jp	nz,83$
 	xor	a
 83$:	out	(nabu_ay_data),a
+	inc	c
 	djnz	82$
 	
 99$	pop	hl
