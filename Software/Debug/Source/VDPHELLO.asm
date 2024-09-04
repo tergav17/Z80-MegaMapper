@@ -5,17 +5,21 @@
 ;*
 ;*    The VDP says hello! Expects VDP to be setup for CP/M
 ;*    console mode.
+;*
+;*    Should be run in the KSG1000 virtual machine
 ;* 
 ;**************************************************************
 
 nabu_vdp_data	equ	0xBE	; VDP Data Port
 nabu_vdp_addr	equ	0xBF	; VDP Address Port
 
+draw_buffer	equ	0xC000
+
 
 ; Program start
 	org	0x0000
 	
-	; Print "hello" message
+	; Do stuff with the VDP
 start:	
 	ld	a,0x42
 	ld	bc,0x1234
@@ -33,21 +37,40 @@ start:
 	inc	l
 	ld	sp,0xFFFF
 	
-	ld	hl,tms_foobar
+	; Move tms_hello to the draw buffer
+	ld	hl,tms_hello
+	ld	de,draw_buffer
+	ld	bc,40*24
+	ldir
+	
+	; Draw a little pattern
+	ld	hl,draw_buffer+(tms_foobar-tms_hello)
 	xor	a
 69$:	ld	(hl),a
 	inc	hl
 	inc	a
 	jp	nz,69$
 	
-	
+
+dowrite:	
+	; Grab the controller values
+	in	a,(0xC0)
+	call	tohex
+	ld	(0xC000 + 40),de
+	in	a,(0xC1)
+	call	tohex
+	ld	(0xC000 + 80),de
+	in	a,(0x00)
+	call	tohex
+	ld	(0xC000 + 120),de
+
 
 	; Set up write address
 	ld	bc,0x4800
 	call	tms_addr
 	
 	; Write it in!
-	ld	hl,tms_hello
+	ld	hl,draw_buffer
 	ld	bc,24*40
 0$:	ld	a,(hl)
 	out	(nabu_vdp_data),a
@@ -58,8 +81,35 @@ start:
 	ld	a,b
 	or	c
 	jp	nz,0$
-1$:	jp	1$
+	jp	dowrite
 
+
+; ----------------------
+; ******** Misc ********
+; ----------------------
+	
+; Converts the value into an 8 bit hex number
+; A = Number to convert
+;
+; Returns DE = result
+; Uses: AF, DE
+tohex:	ld	d,a
+	call	0$
+	ld	e,a
+	ld	a,d
+	call	1$
+	ld	d,a
+	ret
+	
+0$:	rra
+	rra
+	rra
+	rra
+1$:	or	0xF0
+	daa
+	add	a,0xA0
+	adc	a,0x40
+	ret
 
 
 

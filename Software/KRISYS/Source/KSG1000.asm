@@ -6,6 +6,7 @@
 ;********************************************************************
 
 #include "KRISYS.asm"
+#include "SN76489.asm"
 
 ; ---------------------------
 ; ******** Core Init ********
@@ -15,6 +16,9 @@
 
 ; Start of SG-1000 core
 core_start:
+
+	; Reset PSG
+	call	snpsg_reset
 
 	; Try to find rom resource
 	ld	de,str_rom
@@ -178,6 +182,12 @@ sg_vdpr_untrap:
 	ld	(zmm_map+0xBF),a
 	ret
 	
+	; Exit out of the emulator
+sg_exit:
+	call	zmm_set_real
+	call	snpsg_reset
+	jp	cpm_exit
+	
 ; -----------------------------------
 ; ******** Interrupt Handler ********
 ; -----------------------------------
@@ -194,7 +204,7 @@ sg_joystick:
 	
 	; Is it an 'ESC'?
 	cp	0x1B
-	jp	z,cpm_exit
+	jp	z,sg_exit
 	
 	; Check for joystick 1
 	cp	0x80
@@ -242,31 +252,31 @@ sg_joystick:
 	; Left 0
 	rrca
 	set	2,(hl)
-	jp	nc,$+2
+	jp	nc,$+5
 	res	2,(hl)
 	
 	; Down 0
 	rrca
 	set	1,(hl)
-	jp	nc,$+2
+	jp	nc,$+5
 	res	1,(hl)
 	
 	; Right 0
 	rrca
 	set	3,(hl)
-	jp	nc,$+2
+	jp	nc,$+5
 	res	3,(hl)
 	
 	; Up 0
 	rrca
 	set	0,(hl)
-	jp	nc,$+2
+	jp	nc,$+5
 	res	0,(hl)
 	
 	; Fire 0
 	rrca
 	set	5,(hl)
-	jp	nc,$+2
+	jp	nc,$+5
 	res	5,(hl)
 	
 	pop	hl
@@ -317,7 +327,8 @@ in_handle:
 	jp	c,10$
 	
 	; Device 0
-	jp	99$
+	ld	a,(sg_last_stroke)
+	ret
 	
 	; Device 1
 10$:	jp	99$
@@ -354,6 +365,20 @@ in_handle:
 ; A = Value outputted by virtual machine
 ; All registers except AF must remain unchanged!
 out_handle:
+	push	af
+
+	in	a,(zmm_addr_lo)
+	rlca
+	jp	c,99$
+	rlca
+	jp	nc,99$
+	
+	; PSG
+	pop	af
+	call	snpsg_send
+	ret
+
+99$:	pop	af
 	ret
 	
 	
