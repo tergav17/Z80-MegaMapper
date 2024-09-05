@@ -118,7 +118,34 @@ mem_fvbyte:
 	; Return
 	pop	hl
 	ret
+	
+; Set a byte in virtual memory
+; A = Value to set
+; HL = Address of byte
+;
+; Returns nothing
+; Uses: AF
+mem_svbyte:
+	; Calculate target bank
+	ld	(mem_work),a
+	call	mem_getbank
+	out	(zmm_bnk3),a
+	
+	; Set the byte
+	push	hl
+	ld	a,h
+	or	0b11000000
+	ld	h,a
+	ld	a,(mem_work)
+	ld	(hl),a
+	
+	; Restore original bank
+	ld	a,(zmm_bnk3_state)
+	out	(zmm_bnk3),a
 
+	; Return
+	pop	hl
+	ret
 
 ; Gets the bank that an address points to
 ; HL = Address to analyse
@@ -265,6 +292,10 @@ str_mem_empty:
 ; ---------------------------
 
 .area	_BSS
+
+; Memory work byte
+mem_work:
+	defs	1
 
 ; Free bank count
 banks_free:

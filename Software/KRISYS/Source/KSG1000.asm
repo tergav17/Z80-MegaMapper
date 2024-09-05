@@ -206,6 +206,10 @@ sg_joystick:
 	cp	0x1B
 	jp	z,sg_exit
 	
+	; Is it 'PAUSE"?
+	cp	0xE9
+	jp	z,zmm_nmi
+	
 	; Check for joystick 1
 	cp	0x80
 	jp	z,20$

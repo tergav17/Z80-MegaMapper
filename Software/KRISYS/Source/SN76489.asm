@@ -82,6 +82,14 @@ snpsg_send:
 	ld	b,0
 	ld	hl,snpsg_atten
 	add	hl,bc
+	
+	; Translate attenuation
+	push	hl
+	ld	c,a
+	ld	hl,snpsg_vol_tab
+	add	hl,bc
+	ld	a,(hl)
+	pop	hl
 	ld	(hl),a
 	jp	80$
 	
@@ -165,6 +173,33 @@ snpsg_send:
 99$	pop	hl
 	pop	bc
 	ret
+
+; -------------------------
+; ******** Tables ********
+; -------------------------
+
+.area	_DATA
+
+; Volume translation table
+; Translates SN attenuation to AY amplitude
+snpsg_vol_tab:
+	defb	0
+	defb	0x8
+	defb	0xA
+	defb	0xB
+	defb	0xC
+	defb	0xC
+	defb	0xE
+	defb	0xE
+	defb	0xE
+	defb	0xE
+	defb	0xE
+	defb	0xF
+	defb	0xF
+	defb	0xF
+	defb	0xF
+	defb	0
+	
 
 ; ---------------------------
 ; ******** Variables ********

@@ -36,6 +36,56 @@ zmm_init:
 	ld	de,str_zmm_init
 	jp	cpm_print
 	
+; Performs a virtual NMI
+;
+; Returns nothing
+; Uses: AF
+zmm_nmi:
+	push	hl
+	
+	; Get the value of the program counter
+	ld	hl,(trap_sp_value)
+	ld	a,h
+	and	zmm_capt_res
+	or	zmm_capt_set
+	ld	h,a
+	ld	a,(hl)
+	ld	(zmm_work),a
+	inc	hl
+	ld	a,h
+	and	zmm_capt_res
+	or	zmm_capt_set
+	ld	h,a
+	ld	a,(hl)
+	
+	; Push it onto the virtual stack
+	ld	hl,(trap_sp_value)
+	dec	hl
+	call	mem_svbyte
+	dec	hl
+	ld	a,(zmm_work)
+	call	mem_svbyte
+	ld	(trap_sp_value),hl
+
+	; Push 0x66 as a return address
+	ld	a,h
+	and	zmm_capt_res
+	or	zmm_capt_set
+	ld	h,a
+	ld	(hl),0x66
+	inc	hl
+	ld	a,h
+	and	zmm_capt_res
+	or	zmm_capt_set
+	ld	h,a
+	ld	(hl),0
+	
+	; Disable interrupts
+	di
+
+	pop	hl
+	ret
+	
 ; Start execution of the virtual machine at a specific location
 ; HL = Address to start execution at
 ; 
@@ -313,6 +363,10 @@ str_zmm_init:
 ; ---------------------------
 
 .area	_BSS
+
+; ZMM work memory
+zmm_work:
+	defs	2
 
 ; Reflected state of control register
 zmm_ctrl_state:
