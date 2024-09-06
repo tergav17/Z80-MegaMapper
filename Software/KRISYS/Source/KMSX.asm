@@ -78,19 +78,19 @@ core_start:
 	ld	de,str_ram_alloc
 	call	cpm_print
 	
-	; Slot 3 RAM
+	; Slot 1 RAM
 	ld	d,1
 	call	mem_alloc
-	ld	(mx_page_0+3),a
+	ld	(mx_page_0+1),a
 	ld	d,1
 	call	mem_alloc
-	ld	(mx_page_1+3),a
+	ld	(mx_page_1+1),a
 	ld	d,1
 	call	mem_alloc
-	ld	(mx_page_2+3),a
+	ld	(mx_page_2+1),a
 	ld	d,1
 	call	mem_alloc
-	ld	(mx_page_3+3),a
+	ld	(mx_page_3+1),a
 	
 	; Mount BIOS in slot 0
 	ld	a,(bm_bios)

@@ -127,6 +127,37 @@ debug_handle:
 	call	tohex
 	ld	(str_rdump_isr+6),de
 	
+	; Get interrupt status
+	ld	a,i
+	ld	a,'-'
+	jp	po,1$
+	ld	a,'X'
+1$:	ld	(str_rdump_ei),a
+
+	; Get I/O trap status
+	in	a,(zmm_isr)
+	or	a
+	ld 	a,'-'
+	jp	p,2$
+	ld	a,'X'
+2$:	ld	(str_rdump_io),a
+
+	; Copy flags
+	ld	de,str_rdump_flag
+	ld	hl,debug_flags
+	ld	a,(debug_state-2)
+	ld	b,8
+	ld	c,a
+3$:	ld	a,(hl)
+	sla	c
+	jp	c,4$
+	ld	a,'-'
+4$:	ld	(de),a
+	inc	hl
+	inc	de
+	djnz	3$
+	
+	
 	; Print
 	ld	de,str_rdump
 	call	cpm_print
@@ -290,6 +321,18 @@ debug_unbind:
 	
 	ret
 	
+; Print the contexts of register A onto the terminal
+; This should really only be used in early system debugging
+; A = Byte to print
+;
+; Returns nothing
+; Uses: All
+debug_puta:
+	call	tohex
+	ld	(str_debug_val),de
+	ld	de,str_debug
+	jp	cpm_print
+	
 	
 	
 ; -------------------------
@@ -297,6 +340,16 @@ debug_unbind:
 ; -------------------------
 
 .area	_DATA
+
+; Debug string
+str_debug:
+	defb 	'REG A = '
+str_debug_val:
+	defb	'XX',0x0A,0x0D,'$'
+	
+; Flag template
+debug_flags:
+	defb	'SZ5H3PNC'
 
 ; Register dump string
 str_rdump:

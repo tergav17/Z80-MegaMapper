@@ -186,6 +186,21 @@ sg_vdpr_untrap:
 sg_exit:
 	call	zmm_set_real
 	call	snpsg_reset
+	
+	; Bodge over the serial # in VRAM
+	ld	hl,0x17FE + 0x4000
+	ld	a,l
+	out	(nabu_vdp_addr),a
+	ld	a,h
+	out	(nabu_vdp_addr),a
+	xor	a
+	out	(nabu_vdp_data),a
+	ex	(sp),hl
+	ex	(sp),hl
+	ex	(sp),hl
+	ex	(sp),hl
+	out	(nabu_vdp_data),a
+	
 	jp	cpm_exit
 	
 ; -----------------------------------
@@ -407,12 +422,6 @@ str_ram_alloc:
 ; Bootup strings
 str_vm_start:
 	defb	'STARTING VM NOW',0x0A,0x0D,'$'
-	
-; Debug string
-str_debug:
-	defb 	'A = '
-str_debug_val:
-	defb	'XX',0x0A,0x0D,'$'
 
 
 ; ----------------------
