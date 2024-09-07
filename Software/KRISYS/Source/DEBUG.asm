@@ -168,7 +168,7 @@ debug_query:
 	ld	a,c
 	
 	; Exit?
-	cp	'Q'
+	cp	0x1B
 	jp	z,cpm_exit
 	
 	; Over?

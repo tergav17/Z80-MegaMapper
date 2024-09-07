@@ -61,7 +61,7 @@ core_start:
 	ld	hl,zmm_top
 	ld	de,zmm_top+1
 	ld	bc,0x4000-1
-	ld	(hl),0xFF
+	ld	(hl),0xC7
 	ldir
 	pop	af
 	or	0b10000000
@@ -110,6 +110,7 @@ core_start:
 	call	zmm_irq_off
 	call	irq_vdp_on
 	call	irq_keyb_on
+;	call	irq_hcca_o_on
 	
 	; Reset joystick state
 	xor	a
@@ -124,7 +125,7 @@ core_start:
 	; Start up VM
 	ld	de,str_vm_start
 	call	cpm_print
-
+	
 	call	zmm_set_virt
 	ld	hl,0x0000
 	jp	zmm_vm_start
@@ -159,6 +160,21 @@ mx_vdpr_untrap:
 	; Exit out of the emulator
 mx_exit:
 	call	zmm_set_real
+	
+	; Bodge over the serial # in VRAM
+	ld	hl,0x17FE + 0x4000
+	ld	a,l
+	out	(nabu_vdp_addr),a
+	ld	a,h
+	out	(nabu_vdp_addr),a
+	xor	a
+	out	(nabu_vdp_data),a
+	ex	(sp),hl
+	ex	(sp),hl
+	ex	(sp),hl
+	ex	(sp),hl
+	out	(nabu_vdp_data),a
+	
 	jp	cpm_exit
 	
 ; -----------------------------------
@@ -368,7 +384,7 @@ ppi_out:
 	
 	; Odd address
 20$:	rrca
-	jp	c,$30
+	jp	c,30$
 	
 	; Port B
 	pop	af
@@ -382,7 +398,7 @@ ppi_out:
 ; Get key inputs from the matrix
 ; A = return keyboard scan code
 mx_key_scan:
-	ld	a,0
+	ld	a,0xFF
 	ret
 	
 ; Sync virtual memory map with expected slot state

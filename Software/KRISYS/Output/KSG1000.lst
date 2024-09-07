@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "KSG1000.asm"
-              	; date: 2024-09-06 16:22:10
+              	; date: 2024-09-06 21:44:24
               	; --------------------------------------
 
 
@@ -1418,7 +1418,7 @@ C000:         	zmm_top		equ	0xC000
               		
               		; In or out?
 0562: FEEC    		cp	0b11101100
-0564: DA7005  		jp	c,0$
+0564: DA7005  	69$:	jp	c,0$
               		
               		; In it is
 0567: CD0E0C  		call	in_handle
@@ -2256,7 +2256,7 @@ C000:         	zmm_top		equ	0xC000
 08F9: 79      		ld	a,c
               		
               		; Exit?
-08FA: FE51    		cp	'Q'
+08FA: FE1B    		cp	0x1B
 08FC: CAF309  		jp	z,cpm_exit
               		
               		; Over?
@@ -3756,5 +3756,5 @@ zmm_vm_start     = $0254 =   596  _TEXT   ZMM.asm:94
 zmm_work         = $10FC =  4348  _BSS    ZMM.asm:368
 
 
-total time: 0.0461 sec.
+total time: 0.0275 sec.
 no errors

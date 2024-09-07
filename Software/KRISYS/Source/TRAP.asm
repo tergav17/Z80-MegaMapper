@@ -42,7 +42,7 @@ trap_io:
 	
 	; In or out?
 	cp	0b11101100
-	jp	c,0$
+69$:	jp	c,0$
 	
 	; In it is
 	call	in_handle
