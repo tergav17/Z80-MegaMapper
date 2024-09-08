@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "VDPHELLO.asm"
-              	; date: 2024-09-07 16:51:50
+              	; date: 2024-09-08 11:15:57
               	; --------------------------------------
 
 
@@ -18,6 +18,8 @@
               	
 0098:         	nabu_vdp_data	equ	0x98	; VDP Data Port
 0099:         	nabu_vdp_addr	equ	0x99 	; VDP Address Port
+00A0:         	nabu_ay_addr	equ	0xA0	; PSG Address
+00A1:         	nabu_ay_data	equ	0xA1	; PSG Data
               	
 C000:         	draw_buffer	equ	0xC000
               	
@@ -253,18 +255,20 @@ C000:         	draw_buffer	equ	0xC000
 
 ; +++ global symbols +++
 
-_end          = $049F =  1183          VDPHELLO.asm:20 (unused)
-_size         = $049F =  1183          VDPHELLO.asm:20 (unused)
-dowrite       = $002F =    47          VDPHELLO.asm:57
-draw_buffer   = $C000 = 49152          VDPHELLO.asm:16
+_end          = $049F =  1183          VDPHELLO.asm:22 (unused)
+_size         = $049F =  1183          VDPHELLO.asm:22 (unused)
+dowrite       = $002F =    47          VDPHELLO.asm:59
+draw_buffer   = $C000 = 49152          VDPHELLO.asm:18
+nabu_ay_addr  = $00A0 =   160          VDPHELLO.asm:15 (unused)
+nabu_ay_data  = $00A1 =   161          VDPHELLO.asm:16 (unused)
 nabu_vdp_addr = $0099 =   153          VDPHELLO.asm:14
 nabu_vdp_data = $0098 =   152          VDPHELLO.asm:13
-start         = $0000 =     0          VDPHELLO.asm:23 (unused)
-tms_addr      = $00D6 =   214          VDPHELLO.asm:154
-tms_foobar    = $01CF =   463          VDPHELLO.asm:171
-tms_hello     = $00DF =   223          VDPHELLO.asm:164
-tohex         = $00BF =   191          VDPHELLO.asm:134
+start         = $0000 =     0          VDPHELLO.asm:25 (unused)
+tms_addr      = $00D6 =   214          VDPHELLO.asm:156
+tms_foobar    = $01CF =   463          VDPHELLO.asm:173
+tms_hello     = $00DF =   223          VDPHELLO.asm:166
+tohex         = $00BF =   191          VDPHELLO.asm:136
 
 
-total time: 0.0024 sec.
+total time: 0.0028 sec.
 no errors

@@ -30,6 +30,26 @@ core_start:
 	ld	bc,256
 	call	res_load
 	
+	; Try to find slot 1 resource
+	xor	a
+	ld	(mx_has_slot_1),a
+	ld	de,str_slot_1
+	call	res_locate
+	or	a
+	jp	nz,1$
+	ld	a,0xFF
+	ld	(mx_has_slot_1),a
+	
+	; Open the resource
+	call	res_open
+	
+	; Load resources into bankmap
+	ld	hl,bm_slot_1
+	ld	bc,256
+	call	res_load
+	
+1$:
+	
 	; Program the I/O map
 	ld	de,str_prgm
 	call	cpm_print
@@ -78,7 +98,7 @@ core_start:
 	ld	de,str_ram_alloc
 	call	cpm_print
 	
-	; Slot 1 RAM
+	; Mount Slot 1 RAM
 	ld	d,1
 	call	mem_alloc
 	ld	(mx_page_0+1),a
@@ -99,6 +119,18 @@ core_start:
 	ld	a,(bm_bios+1)
 	or	0b10000000
 	ld	(mx_page_1),a
+	
+	; Mount User Slot 1
+	ld	a,(mx_has_slot_1)
+	or	a
+	jp	z,50$
+	ld	a,(bm_slot_1)
+	or	0b10000000
+	ld	(mx_page_1+2),a
+	ld	a,(bm_slot_1+1)
+	or	0b10000000
+	ld	(mx_page_2+2),a
+50$:
 	
 	; Initalize slots
 	xor	a
@@ -234,22 +266,29 @@ mx_keyboard:
 	ret
 
 	; Handle a joystick data byte
-40$:	push	hl
-	ld	hl,mx_ctrl_1
+40$:	push	bc
+	push	hl
+	ld	a,(mx_last_stroke)
+	and	0b00011111
+	ld	b,0
+	ld	c,a
+	ld	hl,mx_ctrltab
+	add	hl,bc
 	ld	a,(mx_ctrl_sel)
 	or	a
+	ld	a,(hl)
 	jp	nz,50$
 	
 	; Joystick 0
-	ld	a,(mx_last_stroke)
-	
+	ld	(mx_ctrl_1),a
 	pop	hl
+	pop	bc
 	ret
 	
 	; Joystick  1
-50$:	ld	a,(mx_last_stroke)
-
+50$:	ld	(mx_ctrl_2),a
 	pop	hl
+	pop	bc
 	ret
 	
 ; Strike a key on the keyboard
@@ -406,14 +445,88 @@ vdp_in:
 	
 ; PSG input
 psg_in:
-	in	a,(zmm_addr_lo)
+	; Read data
+	ld	a,(mx_ay_latch)
+	
+	; Port A?
+	cp	14
+	jp	z,20$
+	
+	; Port B?
+	cp	15
+	jp	z,30$
+	
+	out	(nabu_ay_latch),a
+	in	a,(nabu_ay_data)
+	ret
+	
+	; Read port A
+20$:	ld	a,(mx_ay_port_b)
+	rlca
+	rlca
+	jp	c,25$
+	
+	; Read controller 1
+	ld	a,(mx_ctrl_1)
+	ret
+	
+	; Read controller 2
+25$:	ld	a,(mx_ctrl_2)
+	ret
+	
+	; Read port B
+30$:	ld	a,(mx_ay_port_b)
 	ret
 	
 
 ; PSG output
 psg_out:
 	in	a,(zmm_addr_lo)
+	rrca
+	jp	c,20$
+	
+	; Set latch
 	pop	af
+	and	0b00001111
+	ld	(mx_ay_latch),a
+	ret
+	
+	; Set data
+20$:	ld	a,(mx_ay_latch)
+	
+	; Enable?
+	cp	7
+	jp	z,30$
+	
+	; Port A?
+	cp	14
+	jp	z,40$
+	
+	; Port B?
+	cp	15
+	jp	z,50$
+	
+	; Normal write
+	out	(nabu_ay_latch),a
+	pop	af
+	out	(nabu_ay_data),a
+	ret
+	
+	; Enable channels
+30$: 	out	(nabu_ay_latch),a
+	pop	af
+	and	0b00111111
+	or	0b01000000
+	out	(nabu_ay_data),a
+	ret
+	
+	; Write port A
+40$:	pop	af
+	ret
+	
+	; Write port B
+50$:	pop	af
+	ld	(mx_ay_port_b),a
 	ret
 	
 	
@@ -578,6 +691,9 @@ mx_slot_sync:
 str_bios:
 	defb	'BIOS',0
 	
+str_slot_1:
+	defb	'S1',0
+	
 ; Bootup strings
 str_prgm:
 	defb	'PROGRAMMING VM I/O MAP',0x0A,0x0D,'$'
@@ -645,6 +761,41 @@ io_map_output:
 	defb	TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP	; 0xD*
 	defb	TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP	; 0xE*
 	defb	TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP,TRAP	; 0xF*
+
+; MSX controller table
+mx_ctrltab:
+	defb	~0b01000000	; -----
+	defb	~0b01000100	; ----L
+	defb	~0b01000010	; ---D-
+	defb	~0b01000110	; ---DL
+	defb	~0b01001000	; --R--
+	defb	~0b01001100	; --R-L
+	defb	~0b01001010	; --RD-
+	defb	~0b01001110	; --RDL
+	defb	~0b01000001	; -U---
+	defb	~0b01000101	; -U--L
+	defb	~0b01000011	; -U-D-
+	defb	~0b01000111	; -U-DL
+	defb	~0b01001001	; -UR--
+	defb	~0b01001101	; -UR-L
+	defb	~0b01001011	; -URD-
+	defb	~0b01001111	; -URDL
+	defb	~0b01010000	; F----
+	defb	~0b01010100	; F---L
+	defb	~0b01010010	; F--D-
+	defb	~0b01010110	; F--DL
+	defb	~0b01011000	; F-R--
+	defb	~0b01011100	; F-R-L
+	defb	~0b01011010	; F-RD-
+	defb	~0b01011110	; F-RDL
+	defb	~0b01010001	; FU---
+	defb	~0b01010101	; FU--L
+	defb	~0b01010011	; FU-D-
+	defb	~0b01010111	; FU-DL
+	defb	~0b01011001	; FUR--
+	defb	~0b01011101	; FUR-L
+	defb	~0b01011011	; FURD-
+	defb	~0b01011111	; FURDL
 
 ; Keyboard lookup table
 mx_keytab:
@@ -783,7 +934,14 @@ mx_keytab:
 
 .area	_BSS
 
-; Reflected state of control register
+mx_has_slot_1:
+	defs	1
+
+; Block map for slot 1 ROM
+bm_slot_1:
+	defs	2
+
+; Block map for BIOS
 bm_bios:
 	defs	2
 	
@@ -813,6 +971,12 @@ mx_page_2:
 mx_page_3:
 	defs	4
 
+; MSX AY Port B output
+mx_ay_port_b:
+	defs 	1
+	
+mx_ay_latch:
+	defs	1
 	
 ; Last stroke from the keyboard
 mx_last_stroke:

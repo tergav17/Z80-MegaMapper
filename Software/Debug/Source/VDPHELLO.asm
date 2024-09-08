@@ -12,6 +12,8 @@
 
 nabu_vdp_data	equ	0x98	; VDP Data Port
 nabu_vdp_addr	equ	0x99 	; VDP Address Port
+nabu_ay_addr	equ	0xA0	; PSG Address
+nabu_ay_data	equ	0xA1	; PSG Data
 
 draw_buffer	equ	0xC000
 
