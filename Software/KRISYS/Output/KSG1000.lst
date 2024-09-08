@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "KSG1000.asm"
-              	; date: 2024-09-06 21:44:24
+              	; date: 2024-09-07 20:27:25
               	; --------------------------------------
 
 
@@ -3756,5 +3756,5 @@ zmm_vm_start     = $0254 =   596  _TEXT   ZMM.asm:94
 zmm_work         = $10FC =  4348  _BSS    ZMM.asm:368
 
 
-total time: 0.0275 sec.
+total time: 0.0263 sec.
 no errors

@@ -6,12 +6,12 @@
 ;*    The VDP says hello! Expects VDP to be setup for CP/M
 ;*    console mode.
 ;*
-;*    Should be run in the KSG1000 virtual machine
+;*    Should be run in the MSX virtual machine
 ;* 
 ;**************************************************************
 
-nabu_vdp_data	equ	0xBE	; VDP Data Port
-nabu_vdp_addr	equ	0xBF	; VDP Address Port
+nabu_vdp_data	equ	0x98	; VDP Data Port
+nabu_vdp_addr	equ	0x99 	; VDP Address Port
 
 draw_buffer	equ	0xC000
 
@@ -21,6 +21,8 @@ draw_buffer	equ	0xC000
 	
 	; Do stuff with the VDP
 start:	
+	ld	a,0x50
+	out	(0xA8),a
 	ld	a,0x42
 	ld	bc,0x1234
 	inc	h
@@ -53,16 +55,52 @@ start:
 	
 
 dowrite:	
-	; Grab the controller values
-	in	a,(0xC0)
+	; Grab key matrix values
+	ld	a,0x00
+	out	(0xAA),a
+	in	a,(0xA9)
 	call	tohex
-	ld	(0xC000 + 40),de
-	in	a,(0xC1)
+	ld	(0xC000 + (40*1)),de
+	ld	a,0x01
+	out	(0xAA),a
+	in	a,(0xA9)
 	call	tohex
-	ld	(0xC000 + 80),de
-	in	a,(0x00)
+	ld	(0xC000 + (40*2)),de
+	ld	a,0x02
+	out	(0xAA),a
+	in	a,(0xA9)
 	call	tohex
-	ld	(0xC000 + 120),de
+	ld	(0xC000 + (40*3)),de
+	ld	a,0x03
+	out	(0xAA),a
+	in	a,(0xA9)
+	call	tohex
+	ld	(0xC000 + (40*4)),de
+	ld	a,0x04
+	out	(0xAA),a
+	in	a,(0xA9)
+	call	tohex
+	ld	(0xC000 + (40*5)),de
+	ld	a,0x05
+	out	(0xAA),a
+	in	a,(0xA9)
+	call	tohex
+	ld	(0xC000 + (40*6)),de
+	ld	a,0x06
+	out	(0xAA),a
+	in	a,(0xA9)
+	call	tohex
+	ld	(0xC000 + (40*7)),de
+	ld	a,0x07
+	out	(0xAA),a
+	in	a,(0xA9)
+	call	tohex
+	ld	(0xC000 + (40*8)),de
+	ld	a,0x08
+	out	(0xAA),a
+	in	a,(0xA9)
+	call	tohex
+	ld	(0xC000 + (40*9)),de
 
 
 	; Set up write address
