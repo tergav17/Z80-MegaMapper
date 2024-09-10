@@ -53,10 +53,10 @@ Bank register bits:
 - 0-7: Bank select (128 total)
 - 8: Write protect page
 
-Instruct register bits
-- 0-1: Last instruction opcode
-- 2: I/O trap occured latch
-- 3-7: Last instruction opcode
+Instruction register bits
+- 0-1: Last instruction opcode (Bits 0-1)
+- 2-6: Last instruction opcode (Bits 3-7)
+- 7: I/O trap occured latch
 
 Control register bits:
 - 0: Enable virtual mode
