@@ -23,6 +23,8 @@ The Z80 data bus buffer currently doesn't work properly due to IM2-related shena
 
 At the moment, there is no way to maintain IFF2 contents during a trap. This is fine for systems that don't need an NMI, but can cause interrupt issues to those that do. It should be possible to add a status bit that keeps trick of if IFF1 and IFF2 are supposed to be equal, and work backwards from there.
 
+The classic NMOS CPUs seem to have issues sometimes with detecting clock edges on the M1 cycle. Currently, this is circumvented by just getting a faster CMOS Z80.
+
 # Installation
 
 The ZMM is designed to slot directly into where the Z80 plugs into the mainboard of the host computer. Everything runs on +5V, so no additional jumpers are needed.
