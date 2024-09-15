@@ -17,6 +17,16 @@ This is different from emulation as fundamentally everything is still executing 
 
 Admittedly, emulation can always provide better results than a janky virtualization set up like this. This is more of a “Because I Can” project than anything else. 
 
+# Virtual Machine Status
+
+## SG-1000
+
+The important parts of this seem to work. The PSG -> AY translation is passable, but it still needs some work in terms of tone and support for the noise channel. Pausing is also buggy due to lack of functional NMI.
+
+## MSX 1
+
+Boots to MSX basic just fine. Can also run all of the 32K cartridge ROMs I threw at it. Keyboard matrix still needs to be updated to support all keys.
+
 # Current Issues
 
 The Z80 data bus buffer currently doesn't work properly due to IM2-related shenanigans. The system works fine without it, so it may be omitted in a future revision.
