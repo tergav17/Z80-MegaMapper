@@ -59,6 +59,6 @@ One of the major design limitations of the ZMM is the fact that no provisions ha
 |        1 | U13        | XC9536PC44    |      |
 |        1 | U14        | 74LS139       |      |
 |      1-4 | U15..18    | AS6C4008      |      |
-|        1 | U19        | 74LS245       |      |
+|        0 | U19        | 74LS245       |      |
 |       19 | C1..19     | 0.1 uF C      |      |
 |        1 | C20        | 100 uF        |      |
