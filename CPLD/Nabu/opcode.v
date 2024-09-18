@@ -42,6 +42,9 @@ reg last_opcode_index_r = 0;
 // Keeps track of the direction of the current I/O instruction
 reg io_direction_r = 0;
 
+// Keeps track of if an instruction is MISC
+reg next_isr_misc = 0;
+
 assign new_isr = new_isr_r;
 assign last_isr_untrap = last_isr_untrap_r;
 assign io_direction = io_direction_r;
@@ -80,6 +83,14 @@ begin
 				force_next_isr <= 0;
 			end
 			last_opcode_index_r <= 0;
+			
+			// Is it a MISC instruction
+			if (data == 8'hED) begin
+				next_isr_misc = 1;
+			end
+			else
+				next_isr_misc = 0;
+			end
 		end
 		else if (data == 8'hDD || data == 8'hFD) begin
 			// IX or IY instruction
