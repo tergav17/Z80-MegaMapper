@@ -55,7 +55,8 @@ Bank register bits:
 
 Instruction register bits
 - 0-1: Last instruction opcode (Bits 0-1)
-- 2-6: Last instruction opcode (Bits 3-7)
+- 2-5: Last instruction opcode (Bits 3-6)
+- 6: IFF Sync Bit
 - 7: I/O trap occured latch
 
 Control register bits:
