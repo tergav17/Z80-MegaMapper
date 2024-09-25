@@ -104,6 +104,7 @@ trap_f_value	equ	kri_stack-2
 #include "TRAP.asm"
 #include "IRQ.asm"
 #include "DEBUG.asm"
+#include "BLOCK.asm"
 
 ; --------------------------------
 ; ******** KRISYS Startup ********
@@ -131,6 +132,7 @@ kri_start:
 	call	mem_map_init
 	call	res_init
 	call 	debug_init
+	call	block_init
 	
 	; Start the core
 	jp	core_start
