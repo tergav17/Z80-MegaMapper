@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "VDPHELLO.asm"
-              	; date: 2024-09-08 11:15:57
+              	; date: 2024-09-26 23:40:30
               	; --------------------------------------
 
 
@@ -270,5 +270,5 @@ tms_hello     = $00DF =   223          VDPHELLO.asm:166
 tohex         = $00BF =   191          VDPHELLO.asm:136
 
 
-total time: 0.0028 sec.
+total time: 0.0503 sec.
 no errors

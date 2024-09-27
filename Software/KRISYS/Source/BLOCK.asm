@@ -18,6 +18,8 @@
 ; ********  Functions ********
 ; ----------------------------
 
+.area	_TEXT
+
 ; Initalize block device handler
 ; 
 ; Returns nothing
@@ -57,8 +59,6 @@ block_write:
 	ret
 
 
-.area	_TEXT
-
 ; ---------------------------
 ; ******** Variables ********
 ; ---------------------------
@@ -67,3 +67,4 @@ block_write:
 
 ; 512 byte buffer for storing blocks
 block_buffer:
+	defs	512

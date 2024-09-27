@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "ZMMBAS.asm"
-              	; date: 2024-08-29 23:49:47
+              	; date: 2024-09-26 23:40:30
               	; --------------------------------------
 
 
@@ -733,5 +733,5 @@ zm_top    = $C000 = 49152          ZMMBAS.asm:30
 zm_trap   = $0037 =    55          ZMMBAS.asm:28
 
 
-total time: 0.0042 sec.
+total time: 0.1048 sec.
 no errors

@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "IOTEST.asm"
-              	; date: 2024-09-02 17:57:37
+              	; date: 2024-09-26 23:40:30
               	; --------------------------------------
 
 
@@ -299,5 +299,5 @@ start     = $0000 =     0          IOTEST.asm:16 (unused)
 test_port = $0000 =     0          IOTEST.asm:11
 
 
-total time: 0.0020 sec.
+total time: 0.0458 sec.
 no errors
