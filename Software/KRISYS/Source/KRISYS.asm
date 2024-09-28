@@ -207,6 +207,27 @@ cpm_getc:
 	ld	(zmm_ctrl_state),a
 	jp	zmm_ctrl_set
 	
+; Sents a character to the console
+;
+; Returns E = character to send
+; Uses: All
+cpm_putc:
+	; Save control register state
+	ld	a,(zmm_ctrl_state)
+	push	af
+	
+	; Go to real mode
+	call zmm_set_real
+	
+	; Do BDOS call
+	ld	c,bdos_con_out
+	call	bdos
+	
+	; Restore register
+	pop	af
+	ld	(zmm_ctrl_state),a
+	jp	zmm_ctrl_set
+	
 ; Go back to CP/M
 ;
 ; Does not return

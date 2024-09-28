@@ -38,6 +38,24 @@ debug_point:
 ; Exit handle
 fuz_exit:
 	jp	cpm_exit
+	
+	
+	; Restore state of registers and return
+fuz_cres:
+	ex	af,af'
+	pop	iy
+	pop	ix
+	pop	hl
+	pop	de
+	pop	bc
+	pop	af
+	exx
+	ex	af,af'
+	pop	hl
+	pop	de
+	pop	bc
+	pop	af
+	ret
 
 
 ; -----------------------------------
@@ -69,7 +87,39 @@ in_handle:
 ; A = Value outputted by virtual machine
 ; All registers except AF must remain unchanged!
 out_handle:
+	push	af
+	ld	a,(zmm_addr_lo)
+	
+	; Register 0x00: SLU output
+	or	a
+	jp	z,io_slu_out
+	
 	ret
+	
+	
+	; Output a character to the termin
+io_slu_out:
+	pop	af
+	push	af
+	push	bc
+	push	de 
+	push	hl
+	ex	af,af'
+	exx
+	push	af
+	push	bc
+	push	de
+	push	hl
+	push	ix
+	push	iy
+	ex	af,af'
+	
+	; Output the character to CP/M
+	ld	e,a
+	call	cpm_putc
+	
+	; Restore context and exit
+	jp	fuz_cres
 	
 
 ; -------------------------
