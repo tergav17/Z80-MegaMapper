@@ -74,12 +74,38 @@ irq_handle:
 ; ******** I/O Handler ********
 ; -----------------------------
 	
+	
+; The virtual memory map provided to the FUZIX virtual machine
+; is as follows:
+;
+; INPUT:
+;	0x00: Console input (blocking)
+;	0x01: Console status (0xFF) if a character is waiting
+;	0x10: Read buffer
+;	0x11: Block I/O status
+
+; OUTPUT:
+;	0x00: Console output
+;	0x10: Write buffer
+;	0x11: Send command
+;	0x12: Block address low
+;	0x13: Block address high
+	
 .area	_TEXT
 
 ; Handle an IN instruction
 ; Inputted value should be returned in register A
 ; All registers except AF must remain unchanged!
 in_handle:
+
+	ld	a,(zmm_addr_lo)
+	
+	; Register 0x00: Console input
+	or	a
+	jp	z,io_con_in
+	
+	; Register 0x01: Console status
+
 	ld	a,0xFF
 	ret
 
@@ -90,15 +116,15 @@ out_handle:
 	push	af
 	ld	a,(zmm_addr_lo)
 	
-	; Register 0x00: SLU output
+	; Register 0x00: Console output
 	or	a
-	jp	z,io_slu_out
+	jp	z,io_con_out
 	
 	ret
 	
 	
-	; Output a character to the termin
-io_slu_out:
+	; Output a character to the terminal
+io_con_out:
 	pop	af
 	push	af
 	push	bc
@@ -120,6 +146,9 @@ io_slu_out:
 	
 	; Restore context and exit
 	jp	fuz_cres
+	
+		
+io_slu_stat
 	
 
 ; -------------------------
